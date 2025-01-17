@@ -1,4 +1,6 @@
 using System;
+using System.Data;
+using System.Data.OleDb;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -31,15 +33,15 @@ namespace WinFormsApp
             this.ClientSize = new Size(800, 500);
             this.Text = "Auto Attendance Transfer";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.LightCyan;
+            this.BackColor = Color.FromArgb(64, 64, 64); // Rich black background for luxury feel
 
             // Start Button
             Button startButton = new Button
             {
                 Text = "Start",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.SeaGreen,
-                ForeColor = Color.White,
+                BackColor = Color.Gold, // Gold for elegance
+                ForeColor = Color.Black, // Black text for contrast
                 Size = new Size(100, 40),
                 Location = new Point(250, 30)
             };
@@ -51,8 +53,8 @@ namespace WinFormsApp
             {
                 Text = "Stop",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Crimson,
-                ForeColor = Color.White,
+                BackColor = Color.DarkRed, // Deep red for prominence
+                ForeColor = Color.White, // White text for clarity
                 Size = new Size(100, 40),
                 Location = new Point(450, 30)
             };
@@ -62,20 +64,22 @@ namespace WinFormsApp
             // Flying File (PictureBox with file icon)
             flyingFile = new PictureBox
             {
-                Image = Image.FromFile("D:/Winforms/WinFormsApp/OIP.jpg"), // Replace with your file icon path
+                Image = Image.FromFile("D:/Winforms/WinFormsApp/OIP.jpg"),
                 SizeMode = PictureBoxSizeMode.StretchImage,
                 Size = new Size(30, 30),
                 Location = new Point(180, 150), // Starting position
+                BackColor = Color.Transparent // Transparent to blend with form
             };
             this.Controls.Add(flyingFile);
 
             // Destination Target (PictureBox with folder icon)
             destinationTarget = new PictureBox
             {
-                Image = Image.FromFile("D:/Winforms/WinFormsApp/vector-folder-icon.jpg"), // Replace with your folder icon path
+                Image = Image.FromFile("D:/Winforms/WinFormsApp/vector-folder-icon.jpg"),
                 SizeMode = PictureBoxSizeMode.StretchImage,
                 Size = new Size(45, 45),
-                Location = new Point(580, 145), // Fixed position for the target
+                Location = new Point(580, 145),
+                BackColor = Color.Transparent // Transparent to blend with form
             };
             this.Controls.Add(destinationTarget);
 
@@ -84,7 +88,7 @@ namespace WinFormsApp
             {
                 Text = "Log Report",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Orange,
+                BackColor = Color.Navy, // Deep blue for contrast
                 ForeColor = Color.White,
                 Size = new Size(100, 40),
                 Location = new Point(100, 200)
@@ -92,15 +96,15 @@ namespace WinFormsApp
             logReportButton.Click += LogReportButton_Click;
             this.Controls.Add(logReportButton);
 
-            // Add the Data Cleanup button
+            // Data Cleanup Button
             Button dataCleanupButton = new Button
             {
                 Text = "Data Cleanup",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Orange,
+                BackColor = Color.Navy,
                 ForeColor = Color.White,
                 Size = new Size(100, 40),
-                Location = new Point(200, 200) // Adjust the location as necessary
+                Location = new Point(200, 200)
             };
             dataCleanupButton.Click += DataCleanupButton_Click;
             this.Controls.Add(dataCleanupButton);
@@ -110,7 +114,7 @@ namespace WinFormsApp
             {
                 Text = "Settings",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Orange,
+                BackColor = Color.Navy,
                 ForeColor = Color.White,
                 Size = new Size(100, 40),
                 Location = new Point(300, 200)
@@ -123,7 +127,7 @@ namespace WinFormsApp
             {
                 Text = "Location",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Orange,
+                BackColor = Color.Navy,
                 ForeColor = Color.White,
                 Size = new Size(100, 40),
                 Location = new Point(400, 200)
@@ -136,7 +140,7 @@ namespace WinFormsApp
             {
                 Text = "Machine Type",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Orange,
+                BackColor = Color.Navy,
                 ForeColor = Color.White,
                 Size = new Size(100, 40),
                 Location = new Point(500, 200)
@@ -149,10 +153,10 @@ namespace WinFormsApp
             {
                 Text = "Close",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Orange,
+                BackColor = Color.Navy,
                 ForeColor = Color.White,
                 Size = new Size(100, 40),
-                Location = new Point(600, 200) // Position next to "Machine Type" button
+                Location = new Point(600, 200)
             };
             closeButton.Click += CloseButton_Click;
             this.Controls.Add(closeButton);
@@ -165,7 +169,8 @@ namespace WinFormsApp
                 ReadOnly = true,
                 Size = new Size(700, 200),
                 Location = new Point(50, 250),
-                BackColor = Color.White
+                BackColor = Color.White,
+                ForeColor = Color.Black
             };
             this.Controls.Add(logTextBox);
 
@@ -296,7 +301,8 @@ namespace WinFormsApp
         private DataGridView machineTypeDataGridView;
         private Button addButton, editButton, deleteButton, saveButton, closeButton, browseButton;
         private Panel editModePanel;
-        private TextBox codeTextBox, companyTextBox, prefixTextBox, formatTextBox, sourcePathTextBox;
+        private TextBox codeTextBox, companyTextBox, prefixTextBox, sourcePathTextBox;
+        private DateTimePicker datePicker;
         private bool isEditMode = false;
         private bool isAddMode = false;
 
@@ -330,8 +336,8 @@ namespace WinFormsApp
             machineTypeDataGridView.Columns.Add("SourcePath", "SourcePath");
 
             // Add some example rows
-            machineTypeDataGridView.Rows.Add("MT001", "Company A", "PRE", "DDMMYYYY", "C:/Source/Files");
-            machineTypeDataGridView.Rows.Add("MT002", "Company B", "FIX", "MMDDYYYY", "D:/Source/Files");
+            machineTypeDataGridView.Rows.Add("MT001", "Company A", "PRE", "11042001.TAS", "C:/Source/Files");
+            machineTypeDataGridView.Rows.Add("MT002", "Company B", "FIX", "12042001.TAS", "D:/Source/Files");
 
             this.Controls.Add(machineTypeDataGridView);
             machineTypeDataGridView.ClearSelection(); // Disable default row selection
@@ -355,9 +361,29 @@ namespace WinFormsApp
             Label prefixLabel = new Label { Text = "File Name Prefix:", Dock = DockStyle.Top };
             prefixTextBox = new TextBox { Dock = DockStyle.Top };
 
-            // File Name Format
+            // File Name Format (Date Picker + TAS)
             Label formatLabel = new Label { Text = "File Name Format:", Dock = DockStyle.Top };
-            formatTextBox = new TextBox { Dock = DockStyle.Top };
+            FlowLayoutPanel formatPanel = new FlowLayoutPanel { Dock = DockStyle.Top, FlowDirection = FlowDirection.LeftToRight };
+
+            datePicker = new DateTimePicker
+            {
+                Format = DateTimePickerFormat.Short,
+                Width = 150
+            };
+
+            TextBox tasTextBox = new TextBox
+            {
+                Text = "TAS",
+                ReadOnly = true,
+                Width = 50,
+                BackColor = SystemColors.Control,
+                BorderStyle = BorderStyle.None,
+                TextAlign = HorizontalAlignment.Center
+            };
+
+            formatPanel.Controls.Add(datePicker);
+            formatPanel.Controls.Add(new Label { Text = ".", AutoSize = true });
+            formatPanel.Controls.Add(tasTextBox);
 
             // File Source Path
             Label sourcePathLabel = new Label { Text = "Source Path:", Dock = DockStyle.Top };
@@ -371,7 +397,7 @@ namespace WinFormsApp
             // Add controls to Edit Panel
             editModePanel.Controls.AddRange(new Control[] {
             sourcePathPanel, sourcePathLabel,
-            formatTextBox, formatLabel,
+            formatPanel, formatLabel,
             prefixTextBox, prefixLabel,
             companyTextBox, companyLabel,
             codeTextBox, codeLabel
@@ -388,53 +414,27 @@ namespace WinFormsApp
             };
 
             // Add Button
-            addButton = new Button
-            {
-                Text = "Add",
-                Size = new Size(75, 30),
-                BackColor = Color.LightGreen
-            };
+            addButton = new Button { Text = "Add", Size = new Size(75, 30) };
             addButton.Click += AddButton_Click;
             buttonPanel.Controls.Add(addButton);
 
             // Edit Button
-            editButton = new Button
-            {
-                Text = "Edit",
-                Size = new Size(75, 30),
-                BackColor = Color.LightBlue
-            };
+            editButton = new Button { Text = "Edit", Size = new Size(75, 30) };
             editButton.Click += EditButton_Click;
             buttonPanel.Controls.Add(editButton);
 
             // Delete Button
-            deleteButton = new Button
-            {
-                Text = "Delete",
-                Size = new Size(75, 30),
-                BackColor = Color.LightCoral
-            };
+            deleteButton = new Button { Text = "Delete", Size = new Size(75, 30) };
             deleteButton.Click += DeleteButton_Click;
             buttonPanel.Controls.Add(deleteButton);
 
             // Save Button
-            saveButton = new Button
-            {
-                Text = "Save",
-                Size = new Size(75, 30),
-                BackColor = Color.LightSkyBlue,
-                Enabled = false
-            };
+            saveButton = new Button { Text = "Save", Size = new Size(75, 30), Enabled = false };
             saveButton.Click += SaveButton_Click;
             buttonPanel.Controls.Add(saveButton);
 
             // Close Button
-            closeButton = new Button
-            {
-                Text = "Close",
-                Size = new Size(75, 30),
-                BackColor = Color.OrangeRed
-            };
+            closeButton = new Button { Text = "Close", Size = new Size(75, 30) };
             closeButton.Click += CloseButton_Click;
             buttonPanel.Controls.Add(closeButton);
 
@@ -463,8 +463,10 @@ namespace WinFormsApp
             codeTextBox.Text = selectedRow.Cells["Code"].Value.ToString();
             companyTextBox.Text = selectedRow.Cells["Company"].Value.ToString();
             prefixTextBox.Text = selectedRow.Cells["Prefix"].Value.ToString();
-            formatTextBox.Text = selectedRow.Cells["Format"].Value.ToString();
             sourcePathTextBox.Text = selectedRow.Cells["SourcePath"].Value.ToString();
+
+            string[] formatSplit = selectedRow.Cells["Format"].Value.ToString().Split('.');
+            datePicker.Value = DateTime.ParseExact(formatSplit[0], "ddMMyyyy", null);
 
             EnterEditMode();
         }
@@ -474,16 +476,17 @@ namespace WinFormsApp
             if (string.IsNullOrWhiteSpace(codeTextBox.Text) ||
                 string.IsNullOrWhiteSpace(companyTextBox.Text) ||
                 string.IsNullOrWhiteSpace(prefixTextBox.Text) ||
-                string.IsNullOrWhiteSpace(formatTextBox.Text) ||
                 string.IsNullOrWhiteSpace(sourcePathTextBox.Text))
             {
                 MessageBox.Show("All fields are required.");
                 return;
             }
 
+            string formattedDate = datePicker.Value.ToString("ddMMyyyy") + ".TAS";
+
             if (isAddMode)
             {
-                machineTypeDataGridView.Rows.Add(codeTextBox.Text, companyTextBox.Text, prefixTextBox.Text, formatTextBox.Text, sourcePathTextBox.Text);
+                machineTypeDataGridView.Rows.Add(codeTextBox.Text, companyTextBox.Text, prefixTextBox.Text, formattedDate, sourcePathTextBox.Text);
             }
             else if (isEditMode)
             {
@@ -491,7 +494,7 @@ namespace WinFormsApp
                 selectedRow.Cells["Code"].Value = codeTextBox.Text;
                 selectedRow.Cells["Company"].Value = companyTextBox.Text;
                 selectedRow.Cells["Prefix"].Value = prefixTextBox.Text;
-                selectedRow.Cells["Format"].Value = formatTextBox.Text;
+                selectedRow.Cells["Format"].Value = formattedDate;
                 selectedRow.Cells["SourcePath"].Value = sourcePathTextBox.Text;
             }
 
@@ -544,21 +547,19 @@ namespace WinFormsApp
             editButton.Enabled = false;
             deleteButton.Enabled = false;
             saveButton.Enabled = true;
-            closeButton.Text = "Cancel";
         }
 
         private void ExitEditMode()
         {
-            isEditMode = false;
-            isAddMode = false;
-
             machineTypeDataGridView.Visible = true;
             editModePanel.Visible = false;
             addButton.Enabled = true;
             editButton.Enabled = true;
             deleteButton.Enabled = true;
             saveButton.Enabled = false;
-            closeButton.Text = "Close";
+            isAddMode = false;
+            isEditMode = false;
+            ClearFields();
         }
 
         private void ClearFields()
@@ -566,11 +567,11 @@ namespace WinFormsApp
             codeTextBox.Clear();
             companyTextBox.Clear();
             prefixTextBox.Clear();
-            formatTextBox.Clear();
             sourcePathTextBox.Clear();
+            datePicker.Value = DateTime.Now;
         }
     }
-  
+
     public class SettingsForm : Form
     {
         private DataGridView settingsDataGridView;
@@ -667,7 +668,8 @@ namespace WinFormsApp
             {
                 Text = "Edit",
                 Size = new Size(75, 30),
-                BackColor = Color.LightGreen
+                BackColor = Color.LightBlue,
+                ForeColor = Color.White
             };
             editButton.Click += EditButton_Click;
             buttonPanel.Controls.Add(editButton);
@@ -677,7 +679,8 @@ namespace WinFormsApp
             {
                 Text = "Save",
                 Size = new Size(75, 30),
-                BackColor = Color.LightSkyBlue,
+                BackColor = Color.LightBlue,
+                ForeColor = Color.White,
                 Enabled = false
             };
             saveButton.Click += SaveButton_Click;
@@ -688,7 +691,8 @@ namespace WinFormsApp
             {
                 Text = "Close",
                 Size = new Size(75, 30),
-                BackColor = Color.OrangeRed
+                BackColor = Color.LightBlue,
+                ForeColor = Color.White
             };
             closeButton.Click += CloseButton_Click;
             buttonPanel.Controls.Add(closeButton);
@@ -783,28 +787,31 @@ namespace WinFormsApp
     public class LocationMaster : Form
     {
         private DataGridView dataGridView;
-        private Button addButton, editButton, deleteButton, saveButton, cancelButton;
+        private Button addButton, editButton, deleteButton;
+        private string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;";
 
         public LocationMaster()
         {
             InitializeComponent();
+            LoadDataFromDatabase();
         }
 
         private void InitializeComponent()
         {
             this.Text = "Location Master";
-            this.ClientSize = new Size(300, 200);
+            this.ClientSize = new Size(400, 300);
             this.StartPosition = FormStartPosition.CenterParent;
 
             // DataGridView
             dataGridView = new DataGridView
             {
                 Dock = DockStyle.Top,
-                Height = 120,
+                Height = 200,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
+                ReadOnly = true,
                 ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
-                ScrollBars = ScrollBars.Both
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect
             };
 
             dataGridView.Columns.Add("Location", "Location");
@@ -837,19 +844,131 @@ namespace WinFormsApp
             this.Controls.Add(buttonPanel);
         }
 
+        private void LoadDataFromDatabase()
+        {
+            try
+            {
+                using (OleDbConnection connection = new OleDbConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = "SELECT * FROM location_master";
+                    OleDbDataAdapter adapter = new OleDbDataAdapter(query, connection);
+                    DataTable dataTable = new DataTable();
+                    adapter.Fill(dataTable);
+
+                    dataGridView.Rows.Clear();
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        dataGridView.Rows.Add(row["Location"], row["CMS"], row["FortunaIn"], row["FortunaOut"]);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading data: {ex.Message}");
+            }
+        }
+
         private void AddButton_Click(object sender, EventArgs e)
         {
-            LocationEditForm editForm = new LocationEditForm(dataGridView);
-            editForm.ShowDialog();
+            //LocationEditForm editForm = new LocationEditForm(dataGridView);
+            LocationEditForm editForm = new LocationEditForm(
+                string.Empty,  // Location (empty for a new entry)
+                string.Empty,  // CMS (empty for a new entry)
+                string.Empty,  // FortunaIn (empty for a new entry)
+                string.Empty,  // FortunaOut (empty for a new entry)
+                dataGridView,  // Pass the DataGridView
+                -1             // Indicate that this is a new entry (no row index)
+            );
+            if (editForm.ShowDialog() == DialogResult.OK)
+            {
+                string location = editForm.LocationText;
+                string cms = editForm.CMSText;
+                string fortunaIn = editForm.FortunaInText;
+                string fortunaOut = editForm.FortunaOutText;
+
+                try
+                {
+                    using (OleDbConnection connection = new OleDbConnection(connectionString))
+                    {
+                        connection.Open();
+                        string query = "INSERT INTO location_master (Location, CMS, FortunaIn, FortunaOut) VALUES (@Location, @CMS, @FortunaIn, @FortunaOut)";
+                        using (OleDbCommand command = new OleDbCommand(query, connection))
+                        {
+                            command.Parameters.AddWithValue("@Location", location);
+                            command.Parameters.AddWithValue("@CMS", cms);
+                            command.Parameters.AddWithValue("@FortunaIn", fortunaIn);
+                            command.Parameters.AddWithValue("@FortunaOut", fortunaOut);
+                            command.ExecuteNonQuery();
+                        }
+                    }
+
+                    LoadDataFromDatabase();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error adding data: {ex.Message}");
+                }
+            }
         }
 
         private void EditButton_Click(object sender, EventArgs e)
         {
             if (dataGridView.SelectedRows.Count > 0)
             {
-                int selectedRowIndex = dataGridView.SelectedRows[0].Index;
-                LocationEditForm editForm = new LocationEditForm(dataGridView, selectedRowIndex);
-                editForm.ShowDialog();
+                DataGridViewRow selectedRow = dataGridView.SelectedRows[0];
+                string originalLocation = selectedRow.Cells["Location"].Value.ToString();
+
+                //LocationEditForm editForm = new LocationEditForm(
+                //    selectedRow.Cells["Location"].Value.ToString(),
+                //    selectedRow.Cells["CMS"].Value.ToString(),
+                //    selectedRow.Cells["FortunaIn"].Value.ToString(),
+                //    selectedRow.Cells["FortunaOut"].Value.ToString()
+                //);
+                LocationEditForm editForm = new LocationEditForm(
+                    selectedRow.Cells["Location"].Value.ToString(),
+                    selectedRow.Cells["CMS"].Value.ToString(),
+                    selectedRow.Cells["FortunaIn"].Value.ToString(),
+                    selectedRow.Cells["FortunaOut"].Value.ToString(),
+                    dataGridView,  // Pass the DataGridView
+                    dataGridView.SelectedRows[0].Index // Pass the selected row index
+                );
+
+                if (editForm.ShowDialog() == DialogResult.OK)
+                {
+                    string location = editForm.LocationText;
+                    string cms = editForm.CMSText;
+                    string fortunaIn = editForm.FortunaInText;
+                    string fortunaOut = editForm.FortunaOutText;
+
+                    try
+                    {
+                        using (OleDbConnection connection = new OleDbConnection(connectionString))
+                        {
+                            connection.Open();
+                            string query = "UPDATE location_master SET Location = @Location, CMS = @CMS, FortunaIn = @FortunaIn, FortunaOut = @FortunaOut WHERE Location = @OriginalLocation";
+                            using (OleDbCommand command = new OleDbCommand(query, connection))
+                            {
+                                command.Parameters.AddWithValue("@Location", location);
+                                command.Parameters.AddWithValue("@CMS", cms);
+                                command.Parameters.AddWithValue("@FortunaIn", fortunaIn);
+                                command.Parameters.AddWithValue("@FortunaOut", fortunaOut);
+                                command.Parameters.AddWithValue("@OriginalLocation", originalLocation);
+                                command.ExecuteNonQuery();
+                            }
+                        }
+
+                        LoadDataFromDatabase();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error editing data: {ex.Message}");
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a row to edit.");
             }
         }
 
@@ -857,7 +976,32 @@ namespace WinFormsApp
         {
             if (dataGridView.SelectedRows.Count > 0)
             {
-                dataGridView.Rows.RemoveAt(dataGridView.SelectedRows[0].Index);
+                DataGridViewRow selectedRow = dataGridView.SelectedRows[0];
+                string location = selectedRow.Cells["Location"].Value.ToString();
+
+                try
+                {
+                    using (OleDbConnection connection = new OleDbConnection(connectionString))
+                    {
+                        connection.Open();
+                        string query = "DELETE FROM location_master WHERE Location = @Location";
+                        using (OleDbCommand command = new OleDbCommand(query, connection))
+                        {
+                            command.Parameters.AddWithValue("@Location", location);
+                            command.ExecuteNonQuery();
+                        }
+                    }
+
+                    LoadDataFromDatabase();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error deleting data: {ex.Message}");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a row to delete.");
             }
         }
     }
@@ -1047,11 +1191,29 @@ namespace WinFormsApp
         private int selectedRowIndex;
         private DataGridView dataGridView;
 
-        public LocationEditForm(DataGridView gridView, int rowIndex = -1)
+        // Database connection string
+        private string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;";
+
+        // Public properties for accessing the text field values
+        public string LocationText => locationNameTextBox.Text;
+        public string CMSText => cmsTextBox.Text;
+        public string FortunaInText => fortunaInTextBox.Text;
+        public string FortunaOutText => fortunaOutTextBox.Text;
+
+        public LocationEditForm(string location = "", string cms = "", string fortunaIn = "", string fortunaOut = "", DataGridView gridView = null, int rowIndex = -1)
         {
             dataGridView = gridView;
             selectedRowIndex = rowIndex;
             InitializeComponent();
+
+            if (rowIndex != -1) // If editing an existing row
+            {
+                locationNameTextBox.Text = location;
+                cmsTextBox.Text = cms;
+                fortunaInTextBox.Text = fortunaIn;
+                fortunaOutTextBox.Text = fortunaOut;
+                isEditMode = true;
+            }
         }
 
         private void InitializeComponent()
@@ -1063,8 +1225,8 @@ namespace WinFormsApp
             // TableLayoutPanel for aligning labels and textboxes
             TableLayoutPanel tableLayoutPanel = new TableLayoutPanel
             {
-                ColumnCount = 2, // Two columns: one for labels, one for textboxes
-                RowCount = 5,    // Five rows for labels and textboxes
+                ColumnCount = 2,
+                RowCount = 5,
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 Padding = new Padding(10),
@@ -1072,9 +1234,9 @@ namespace WinFormsApp
                 AutoScroll = true
             };
 
-            // Column styles to allow labels to wrap and take as much space as needed
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30)); // First column (for labels)
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70)); // Second column (for textboxes)
+            // Column styles
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70));
 
             // Labels and TextBoxes
             locationNameLabel = new Label { Text = "Location Name:" };
@@ -1117,36 +1279,72 @@ namespace WinFormsApp
             // Load data for editing if it's in edit mode
             if (selectedRowIndex != -1)
             {
-                locationNameTextBox.Text = dataGridView.Rows[selectedRowIndex].Cells[0].Value.ToString();
-                cmsTextBox.Text = dataGridView.Rows[selectedRowIndex].Cells[1].Value.ToString();
-                fortunaInTextBox.Text = dataGridView.Rows[selectedRowIndex].Cells[2].Value.ToString();
-                fortunaOutTextBox.Text = dataGridView.Rows[selectedRowIndex].Cells[3].Value.ToString();
+                locationNameTextBox.Text = dataGridView.Rows[selectedRowIndex].Cells[0].Value?.ToString();
+                cmsTextBox.Text = dataGridView.Rows[selectedRowIndex].Cells[1].Value?.ToString();
+                fortunaInTextBox.Text = dataGridView.Rows[selectedRowIndex].Cells[2].Value?.ToString();
+                fortunaOutTextBox.Text = dataGridView.Rows[selectedRowIndex].Cells[3].Value?.ToString();
                 isEditMode = true;
             }
         }
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(locationNameTextBox.Text) || string.IsNullOrWhiteSpace(cmsTextBox.Text) ||
-                string.IsNullOrWhiteSpace(fortunaInTextBox.Text) || string.IsNullOrWhiteSpace(fortunaOutTextBox.Text))
+            if (string.IsNullOrWhiteSpace(LocationText) || string.IsNullOrWhiteSpace(CMSText) ||
+                string.IsNullOrWhiteSpace(FortunaInText) || string.IsNullOrWhiteSpace(FortunaOutText))
             {
                 MessageBox.Show("Please fill all the fields.");
                 return;
             }
 
-            if (isEditMode)
+            try
             {
-                dataGridView.Rows[selectedRowIndex].Cells[0].Value = locationNameTextBox.Text;
-                dataGridView.Rows[selectedRowIndex].Cells[1].Value = cmsTextBox.Text;
-                dataGridView.Rows[selectedRowIndex].Cells[2].Value = fortunaInTextBox.Text;
-                dataGridView.Rows[selectedRowIndex].Cells[3].Value = fortunaOutTextBox.Text;
-            }
-            else
-            {
-                dataGridView.Rows.Add(locationNameTextBox.Text, cmsTextBox.Text, fortunaInTextBox.Text, fortunaOutTextBox.Text);
-            }
+                using (var connection = new OleDbConnection(connectionString))
+                {
+                    connection.Open();
+                    string query;
 
-            this.Close();
+                    if (isEditMode)
+                    {
+                        // Update existing record in database
+                        query = "UPDATE location_master SET CMS = @CMS, FortunaIn = @FortunaIn, FortunaOut = @FortunaOut WHERE Location = @Location";
+                    }
+                    else
+                    {
+                        // Insert new record into database
+                        query = "INSERT INTO location_master (Location, CMS, FortunaIn, FortunaOut) VALUES (@Location, @CMS, @FortunaIn, @FortunaOut)";
+                    }
+
+                    using (var command = new OleDbCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Location", locationNameTextBox.Text);
+                        command.Parameters.AddWithValue("@CMS", cmsTextBox.Text);
+                        command.Parameters.AddWithValue("@FortunaIn", fortunaInTextBox.Text);
+                        command.Parameters.AddWithValue("@FortunaOut", fortunaOutTextBox.Text);
+
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                // Update DataGridView
+                if (isEditMode)
+                {
+                    dataGridView.Rows[selectedRowIndex].Cells[0].Value = LocationText;
+                    dataGridView.Rows[selectedRowIndex].Cells[1].Value = CMSText;
+                    dataGridView.Rows[selectedRowIndex].Cells[2].Value = FortunaInText;
+                    dataGridView.Rows[selectedRowIndex].Cells[3].Value = FortunaOutText;
+                }
+                else
+                {
+                    dataGridView.Rows.Add(LocationText, CMSText, FortunaInText, FortunaOutText);
+                }
+
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}");
+            }
         }
     }
+
 }

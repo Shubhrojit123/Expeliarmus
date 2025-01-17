@@ -1,8 +1,11 @@
 {
   "ExpandedNodes": [
     "",
-    "\\WinFormsApp"
+    "\\WinFormsApp",
+    "\\WinFormsApp\\bin\\Debug",
+    "\\WinFormsApp\\bin\\Debug\\net8.0-windows",
+    "\\WinFormsApp\\bin\\Release\\net8.0-windows"
   ],
-  "SelectedNode": "\\WinFormsApp\\Program.cs",
+  "SelectedNode": "\\WinFormsApp\\bin",
   "PreviewInSolutionExplorer": false
 }

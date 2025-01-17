@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "D:\\Winforms\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Winforms\\WinFormsApp\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WinFormsApp\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Winforms\\WinFormsApp\\HomePage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WinFormsApp\\HomePage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Winforms\\WinFormsApp\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WinFormsApp\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Winforms\\WinFormsApp\\WinFormsApp.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
@@ -30,21 +30,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\Winforms\\WinFormsApp\\Program.cs",
-              "RelativeDocumentMoniker": "WinFormsApp\\Program.cs",
-              "ToolTip": "D:\\Winforms\\WinFormsApp\\Program.cs",
-              "RelativeToolTip": "WinFormsApp\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAWAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-13T11:38:33.16Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Document",
               "DocumentIndex": 2,
@@ -55,8 +42,7 @@
               "RelativeToolTip": "WinFormsApp\\WinFormsApp.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-01-13T06:54:58.819Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-13T06:54:58.819Z"
             },
             {
               "$type": "Document",
@@ -72,16 +58,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "HomePage.cs",
               "DocumentMoniker": "D:\\Winforms\\WinFormsApp\\HomePage.cs",
               "RelativeDocumentMoniker": "WinFormsApp\\HomePage.cs",
               "ToolTip": "D:\\Winforms\\WinFormsApp\\HomePage.cs",
               "RelativeToolTip": "WinFormsApp\\HomePage.cs",
-              "ViewState": "AgIAAGYAAAAAAAAAAAAAAHEAAAApAAAAAAAAAA==",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAAAD8CAABJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-08T06:14:33.253Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Winforms\\WinFormsApp\\Program.cs",
+              "RelativeDocumentMoniker": "WinFormsApp\\Program.cs",
+              "ToolTip": "D:\\Winforms\\WinFormsApp\\Program.cs",
+              "RelativeToolTip": "WinFormsApp\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-13T11:38:33.16Z"
             },
             {
               "$type": "Document",
