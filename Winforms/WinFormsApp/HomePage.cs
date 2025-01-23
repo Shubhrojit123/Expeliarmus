@@ -58,13 +58,20 @@ namespace WinFormsApp
                 Size = new Size(100, 40),
                 Location = new Point(450, 30)
             };
+
             stopButton.Click += StopButton_Click;
             this.Controls.Add(stopButton);
+
+            // Get the current directory of the application
+            string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            // Path to the "Images" folder relative to the application's directory
+            string imagesDirectory = Path.Combine(appDirectory, "Images");
 
             // Flying File (PictureBox with file icon)
             flyingFile = new PictureBox
             {
-                Image = Image.FromFile("D:/Winforms/WinFormsApp/OIP.jpg"),
+                Image = Image.FromFile(Path.Combine(imagesDirectory, "OIP.jpg")),
                 SizeMode = PictureBoxSizeMode.StretchImage,
                 Size = new Size(30, 30),
                 Location = new Point(180, 150), // Starting position
@@ -75,13 +82,14 @@ namespace WinFormsApp
             // Destination Target (PictureBox with folder icon)
             destinationTarget = new PictureBox
             {
-                Image = Image.FromFile("D:/Winforms/WinFormsApp/vector-folder-icon.jpg"),
+                Image = Image.FromFile(Path.Combine(imagesDirectory, "vector-folder-icon.jpg")),
                 SizeMode = PictureBoxSizeMode.StretchImage,
                 Size = new Size(45, 45),
                 Location = new Point(580, 145),
                 BackColor = Color.Transparent // Transparent to blend with form
             };
             this.Controls.Add(destinationTarget);
+
 
             // Log Report Button
             Button logReportButton = new Button
@@ -197,8 +205,10 @@ namespace WinFormsApp
 
             try
             {
+                string databasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "user_details.MDB");
+                //string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databasePath};";
                 // Retrieve data from "machine_type_master" and "settings" tables
-                using (OleDbConnection connection = new OleDbConnection("Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;"))
+                using (OleDbConnection connection = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databasePath};"))
                 {
                     connection.Open();
 
@@ -343,13 +353,31 @@ namespace WinFormsApp
         private bool isEditMode = false;
         private bool isAddMode = false;
 
-        // Database connection string
-        private string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;";
+        // Dynamic database connection string
+        private string connectionString;
 
         public MachineTypeForm()
         {
             InitializeComponent();
+            SetupDatabaseConnection();
             LoadDataFromDatabase();
+        }
+
+        private void SetupDatabaseConnection()
+        {
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory; // Path to the executable directory
+            string dataFolderPath = Path.Combine(baseDirectory, "Data"); // Path to Data folder
+            string databaseFilePath = Path.Combine(dataFolderPath, "user_details.MDB"); // Path to the MDB file
+
+            // Ensure the database file exists
+            if (!File.Exists(databaseFilePath))
+            {
+                MessageBox.Show("Database file not found! Ensure it is placed in the 'Data' folder beside the executable.");
+                throw new FileNotFoundException("Database file not found.");
+            }
+
+            // Connection string for the database
+            connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databaseFilePath};";
         }
 
         private void InitializeComponent()
@@ -733,10 +761,25 @@ namespace WinFormsApp
 
         private void InitializeDatabase()
         {
-            // Setup the OleDb connection to your database (replace connection string as per your setup)
-            string connectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;";  // Update path to your MDB file
+            // Get the base directory of the executable
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            // Define the path to the Data folder
+            string dataFolderPath = Path.Combine(baseDirectory, "Data");
+            // Define the path to the database file
+            string databaseFilePath = Path.Combine(dataFolderPath, "user_details.MDB");
+
+            // Check if the database file exists
+            if (!File.Exists(databaseFilePath))
+            {
+                MessageBox.Show("Database file not found! Ensure it is placed in the 'Data' folder beside the executable.");
+                throw new FileNotFoundException("Database file not found.");
+            }
+
+            // Construct the connection string dynamically
+            string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databaseFilePath};";
             connection = new OleDbConnection(connectionString);
         }
+
 
         private void LoadSettingsData()
         {
