@@ -190,24 +190,65 @@ namespace WinFormsApp
         {
             isAnimating = true;
 
-            // Disable the Start button and change its color to grey
-            if (sender is Button startButton)
+            // Retrieve file transfer details from the database
+            string fileName = string.Empty;
+            string sourcePath = string.Empty;
+            string destinationPath = string.Empty;
+
+            try
             {
-                startButton.Enabled = false;
-                startButton.BackColor = Color.LightGray;
-                startButton.ForeColor = Color.DarkGray; // Change text color to dark grey
+                // Retrieve data from "machine_type_master" and "settings" tables
+                using (OleDbConnection connection = new OleDbConnection("Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;"))
+                {
+                    connection.Open();
+
+                    // Get file name and source path
+                    using (OleDbCommand command = new OleDbCommand("SELECT Fl_Nm_Frmt, Fl_Src_Pth FROM machine_type_master", connection))
+                    using (OleDbDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            fileName = reader["Fl_Nm_Frmt"].ToString();
+                            sourcePath = Path.Combine(reader["Fl_Src_Pth"].ToString(),$"{fileName}");
+                        }
+                    }
+
+                    // Get destination path and file naming details
+                    using (OleDbCommand command = new OleDbCommand("SELECT Dstntn_Path, Fl_Prfx, Nw_Fl_Frmt FROM settings", connection))
+                    using (OleDbDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string prefix = reader["Fl_Prfx"].ToString();
+                            string newFileName = reader["Nw_Fl_Frmt"].ToString();
+                            destinationPath = Path.Combine(reader["Dstntn_Path"].ToString(), $"{prefix}{newFileName}.tas");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logTextBox.AppendText($"Error retrieving data from database: {ex.Message}\r\n");
+                return;
             }
 
-            // Enable the Stop button and keep its original color
-            var stopButton = this.Controls.OfType<Button>().FirstOrDefault(button => button.Text == "Stop");
-            if (stopButton != null)
+            logTextBox.AppendText($"Starting file transfer...\r\nSource: {sourcePath}\r\nDestination: {destinationPath}\r\n");
+
+            var transferTask = Task.Run(() =>
             {
-                stopButton.Enabled = true;
-                stopButton.BackColor = Color.Crimson; // Restore original color
-                stopButton.ForeColor = Color.White; // Restore original text color
-            }
-            logTextBox.AppendText("Transfer started...\r\n");
-            await AnimateFileTransferAsync(); // Start the asynchronous animation
+                try
+                {
+                    // Perform the file transfer
+                    File.Copy(sourcePath, destinationPath, true);
+                    logTextBox.Invoke((Action)(() => logTextBox.AppendText("File transfer completed.\r\n")));
+                }
+                catch (Exception ex)
+                {
+                    logTextBox.Invoke((Action)(() => logTextBox.AppendText($"Error during file transfer: {ex.Message}\r\n")));
+                }
+            });
+
+            await AnimateFileTransferAsync(transferTask); // Start the animation with the file transfer task
         }
 
         private void StopButton_Click(object sender, EventArgs e)
@@ -233,29 +274,25 @@ namespace WinFormsApp
             logTextBox.AppendText("Transfer stopped.\r\n");
         }
 
-        private async Task AnimateFileTransferAsync()
+        private async Task AnimateFileTransferAsync(Task fileTransferTask)
         {
-            while (isAnimating)
+            do
             {
-                t += 0.007f; // Adjust this value for the desired speed
-
-                int x = (int)((1 - t) * (1 - t) * startPosition.X + 2 * (1 - t) * t * controlPoint.X + t * t * endPosition.X);
-                int y = (int)((1 - t) * (1 - t) * startPosition.Y + 2 * (1 - t) * t * controlPoint.Y + t * t * endPosition.Y);
-
-                flyingFile.Location = new Point(x, y);
-
-                // Log each position
-                logTextBox.AppendText($"File at: ({x}, {y})\r\n");
-
-                if (t >= 1.0f)
+                t = 0;
+                while (t < 1.0f && isAnimating)
                 {
-                    t = 0.0f; // Reset progression
-                    flyingFile.Location = startPosition; // Reset to start position
-                    logTextBox.AppendText("File transfer completed.\r\n");
-                }
+                    t += 0.007f; // Adjust this value for the desired speed
 
-                await Task.Delay(10);
-            }
+                    int x = (int)((1 - t) * (1 - t) * startPosition.X + 2 * (1 - t) * t * controlPoint.X + t * t * endPosition.X);
+                    int y = (int)((1 - t) * (1 - t) * startPosition.Y + 2 * (1 - t) * t * controlPoint.Y + t * t * endPosition.Y);
+
+                    flyingFile.Location = new Point(x, y);
+
+                    await Task.Delay(10); // Smooth animation
+                }
+            } while (isAnimating && !fileTransferTask.IsCompleted);
+
+            isAnimating = false;
         }
 
         private void LogReportButton_Click(object sender, EventArgs e)
@@ -306,9 +343,13 @@ namespace WinFormsApp
         private bool isEditMode = false;
         private bool isAddMode = false;
 
+        // Database connection string
+        private string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;";
+
         public MachineTypeForm()
         {
             InitializeComponent();
+            LoadDataFromDatabase();
         }
 
         private void InitializeComponent()
@@ -335,12 +376,7 @@ namespace WinFormsApp
             machineTypeDataGridView.Columns.Add("Format", "Format");
             machineTypeDataGridView.Columns.Add("SourcePath", "SourcePath");
 
-            // Add some example rows
-            machineTypeDataGridView.Rows.Add("MT001", "Company A", "PRE", "11042001.TAS", "C:/Source/Files");
-            machineTypeDataGridView.Rows.Add("MT002", "Company B", "FIX", "12042001.TAS", "D:/Source/Files");
-
             this.Controls.Add(machineTypeDataGridView);
-            machineTypeDataGridView.ClearSelection(); // Disable default row selection
 
             // Edit Mode Panel
             editModePanel = new Panel
@@ -361,7 +397,7 @@ namespace WinFormsApp
             Label prefixLabel = new Label { Text = "File Name Prefix:", Dock = DockStyle.Top };
             prefixTextBox = new TextBox { Dock = DockStyle.Top };
 
-            // File Name Format (Date Picker + TAS)
+            // File Name Format
             Label formatLabel = new Label { Text = "File Name Format:", Dock = DockStyle.Top };
             FlowLayoutPanel formatPanel = new FlowLayoutPanel { Dock = DockStyle.Top, FlowDirection = FlowDirection.LeftToRight };
 
@@ -441,6 +477,38 @@ namespace WinFormsApp
             this.Controls.Add(buttonPanel);
         }
 
+        private void LoadDataFromDatabase()
+        {
+            machineTypeDataGridView.Rows.Clear();
+
+            using (OleDbConnection connection = new OleDbConnection(connectionString))
+            {
+                string query = "SELECT * FROM machine_type_master";
+                OleDbCommand command = new OleDbCommand(query, connection);
+
+                try
+                {
+                    connection.Open();
+                    OleDbDataReader reader = command.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        machineTypeDataGridView.Rows.Add(
+                            reader["Mchn_Typ_Cd"].ToString(),
+                            reader["Com_Nm"].ToString(),
+                            reader["Fl_Nm_Prfx"].ToString(),
+                            reader["Fl_Nm_Frmt"].ToString(),
+                            reader["Fl_Src_Pth"].ToString()
+                        );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading data: {ex.Message}");
+                }
+            }
+        }
+
         private void AddButton_Click(object sender, EventArgs e)
         {
             ClearFields();
@@ -475,31 +543,59 @@ namespace WinFormsApp
         {
             if (string.IsNullOrWhiteSpace(codeTextBox.Text) ||
                 string.IsNullOrWhiteSpace(companyTextBox.Text) ||
-                string.IsNullOrWhiteSpace(prefixTextBox.Text) ||
                 string.IsNullOrWhiteSpace(sourcePathTextBox.Text))
             {
-                MessageBox.Show("All fields are required.");
+                MessageBox.Show("Some fields are necessary.");
                 return;
             }
 
             string formattedDate = datePicker.Value.ToString("ddMMyyyy") + ".TAS";
 
-            if (isAddMode)
+            using (OleDbConnection connection = new OleDbConnection(connectionString))
             {
-                machineTypeDataGridView.Rows.Add(codeTextBox.Text, companyTextBox.Text, prefixTextBox.Text, formattedDate, sourcePathTextBox.Text);
-            }
-            else if (isEditMode)
-            {
-                DataGridViewRow selectedRow = machineTypeDataGridView.SelectedRows[0];
-                selectedRow.Cells["Code"].Value = codeTextBox.Text;
-                selectedRow.Cells["Company"].Value = companyTextBox.Text;
-                selectedRow.Cells["Prefix"].Value = prefixTextBox.Text;
-                selectedRow.Cells["Format"].Value = formattedDate;
-                selectedRow.Cells["SourcePath"].Value = sourcePathTextBox.Text;
+                OleDbCommand command;
+
+                if (isAddMode)
+                {
+                    string insertQuery = "INSERT INTO machine_type_master (Mchn_Typ_Cd, Com_Nm, Fl_Nm_Prfx, Fl_Nm_Frmt, Fl_Src_Pth) " +
+                                         "VALUES (?, ?, ?, ?, ?)";
+                    command = new OleDbCommand(insertQuery, connection);
+                    command.Parameters.AddWithValue("?", codeTextBox.Text);
+                    command.Parameters.AddWithValue("?", companyTextBox.Text);
+                    command.Parameters.AddWithValue("?", prefixTextBox.Text);
+                    command.Parameters.AddWithValue("?", formattedDate);
+                    command.Parameters.AddWithValue("?", sourcePathTextBox.Text);
+                }
+                else if (isEditMode)
+                {
+                    string updateQuery = "UPDATE machine_type_master SET Com_Nm = ?, Fl_Nm_Prfx = ?, Fl_Nm_Frmt = ?, Fl_Src_Pth = ? " +
+                                         "WHERE Mchn_Typ_Cd = ?";
+                    command = new OleDbCommand(updateQuery, connection);
+                    command.Parameters.AddWithValue("?", companyTextBox.Text);
+                    command.Parameters.AddWithValue("?", prefixTextBox.Text);
+                    command.Parameters.AddWithValue("?", formattedDate);
+                    command.Parameters.AddWithValue("?", sourcePathTextBox.Text);
+                    command.Parameters.AddWithValue("?", codeTextBox.Text);
+                }
+                else
+                {
+                    return;
+                }
+
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    MessageBox.Show(isAddMode ? "Record added successfully." : "Record updated successfully.");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error saving data: {ex.Message}");
+                }
             }
 
-            MessageBox.Show("Changes saved successfully.");
             ExitEditMode();
+            LoadDataFromDatabase();
         }
 
         private void DeleteButton_Click(object sender, EventArgs e)
@@ -510,21 +606,28 @@ namespace WinFormsApp
                 return;
             }
 
-            if (MessageBox.Show("Are you sure you want to delete the selected row?", "Confirm Delete", MessageBoxButtons.YesNo) == DialogResult.Yes)
-            {
-                machineTypeDataGridView.Rows.Remove(machineTypeDataGridView.SelectedRows[0]);
-            }
-        }
+            DataGridViewRow selectedRow = machineTypeDataGridView.SelectedRows[0];
+            string codeToDelete = selectedRow.Cells["Code"].Value.ToString();
 
-        private void BrowseButton_Click(object sender, EventArgs e)
-        {
-            using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog())
+            using (OleDbConnection connection = new OleDbConnection(connectionString))
             {
-                if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                string deleteQuery = "DELETE FROM machine_type_master WHERE Mchn_Typ_Cd = ?";
+                OleDbCommand command = new OleDbCommand(deleteQuery, connection);
+                command.Parameters.AddWithValue("?", codeToDelete);
+
+                try
                 {
-                    sourcePathTextBox.Text = folderBrowserDialog.SelectedPath;
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    MessageBox.Show("Record deleted successfully.");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error deleting data: {ex.Message}");
                 }
             }
+
+            LoadDataFromDatabase();
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
@@ -539,26 +642,53 @@ namespace WinFormsApp
             }
         }
 
+        //private void EnterEditMode()
+        //{
+        //    editModePanel.Dock = DockStyle.Fill; // Make the edit panel fill the form
+        //    editModePanel.Visible = true;
+        //    saveButton.Enabled = true;
+        //    machineTypeDataGridView.Enabled = false;
+        //    addButton.Enabled = false;
+        //    editButton.Enabled = false;
+        //    deleteButton.Enabled = false;
+        //}
         private void EnterEditMode()
         {
-            machineTypeDataGridView.Visible = false;
-            editModePanel.Visible = true;
+            editModePanel.Visible = true; // Show the edit panel
+            machineTypeDataGridView.Visible = false; // Hide the DataGridView
+            saveButton.Enabled = true;
+
             addButton.Enabled = false;
             editButton.Enabled = false;
             deleteButton.Enabled = false;
-            saveButton.Enabled = true;
         }
 
+        //private void ExitEditMode()
+        //{
+        //    editModePanel.Visible = false;
+        //    saveButton.Enabled = false;
+        //    machineTypeDataGridView.Enabled = true;
+        //    addButton.Enabled = true;
+        //    editButton.Enabled = true;
+        //    deleteButton.Enabled = true;
+
+        //    isEditMode = false;
+        //    isAddMode = false;
+        //    ClearFields();
+        //}
         private void ExitEditMode()
         {
-            machineTypeDataGridView.Visible = true;
-            editModePanel.Visible = false;
+            editModePanel.Visible = false; // Hide the edit panel
+            machineTypeDataGridView.Visible = true; // Show the DataGridView
+            saveButton.Enabled = false;
+
+            machineTypeDataGridView.Enabled = true;
             addButton.Enabled = true;
             editButton.Enabled = true;
             deleteButton.Enabled = true;
-            saveButton.Enabled = false;
-            isAddMode = false;
+
             isEditMode = false;
+            isAddMode = false;
             ClearFields();
         }
 
@@ -568,22 +698,79 @@ namespace WinFormsApp
             companyTextBox.Clear();
             prefixTextBox.Clear();
             sourcePathTextBox.Clear();
-            datePicker.Value = DateTime.Now;
+            datePicker.Value = DateTime.Today;
+        }
+
+        private void BrowseButton_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog())
+            {
+                if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                {
+                    sourcePathTextBox.Text = folderBrowserDialog.SelectedPath;
+                }
+            }
         }
     }
 
     public class SettingsForm : Form
     {
         private DataGridView settingsDataGridView;
-        private Button editButton, saveButton, closeButton, browseButton;
+        private Button addButton, editButton, saveButton, closeButton, browseButton;
         private Panel editModePanel;
-        private TextBox filePrefixTextBox, newFileFormatTextBox, olderThanTextBox, destinationPathTextBox;
+        private TextBox filePrefixTextBox, destinationPathTextBox, olderThanTextBox;
         private CheckBox autoDeleteCheckBox;
+        private DateTimePicker newFileFormatPicker;
         private bool isEditMode = false;
+        private OleDbConnection connection;
 
         public SettingsForm()
         {
             InitializeComponent();
+            InitializeDatabase();
+            LoadSettingsData();
+        }
+
+        private void InitializeDatabase()
+        {
+            // Setup the OleDb connection to your database (replace connection string as per your setup)
+            string connectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;";  // Update path to your MDB file
+            connection = new OleDbConnection(connectionString);
+        }
+
+        private void LoadSettingsData()
+        {
+            string query = "SELECT Id, Fl_Prfx, Nw_Fl_Frmt, Dstntn_Path FROM settings";
+
+            try
+            {
+                connection.Open();
+                OleDbDataAdapter dataAdapter = new OleDbDataAdapter(query, connection);
+                DataTable dataTable = new DataTable();
+                dataAdapter.Fill(dataTable);
+
+                // Clear existing rows in DataGridView
+                settingsDataGridView.Rows.Clear();
+
+                // Add rows to DataGridView
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    string filePrefix = row["Fl_Prfx"].ToString();
+                    string newFileFormat = DateTime.ParseExact(row["Nw_Fl_Frmt"].ToString(), "yyMMdd", null).ToString("yyMMdd");
+                    string fileFormat = $"{filePrefix}{newFileFormat}.tas";
+                    string path = row["Dstntn_Path"].ToString();
+
+                    settingsDataGridView.Rows.Add(row["Id"], fileFormat, path);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error loading settings data: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
         }
 
         private void InitializeComponent()
@@ -607,10 +794,6 @@ namespace WinFormsApp
             settingsDataGridView.Columns.Add("FileFormat", "FileFormat");
             settingsDataGridView.Columns.Add("Path", "Path");
 
-            // Add some example rows
-            settingsDataGridView.Rows.Add("1", "CSV", "D:/Data/File.csv");
-            settingsDataGridView.Rows.Add("2", "XML", "D:/Data/File.xml");
-
             this.Controls.Add(settingsDataGridView);
 
             // Edit Mode Panel
@@ -626,7 +809,28 @@ namespace WinFormsApp
 
             // New File Format
             Label newFileFormatLabel = new Label { Text = "New File Format:", Dock = DockStyle.Top };
-            newFileFormatTextBox = new TextBox { Dock = DockStyle.Top };
+            FlowLayoutPanel newFileFormatPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                FlowDirection = FlowDirection.LeftToRight,
+                AutoSize = true
+            };
+
+            newFileFormatPicker = new DateTimePicker
+            {
+                Format = DateTimePickerFormat.Short,
+                Width = 150
+            };
+
+            Label tasSuffixLabel = new Label
+            {
+                Text = ".tas",
+                AutoSize = true,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            newFileFormatPanel.Controls.Add(newFileFormatPicker);
+            newFileFormatPanel.Controls.Add(tasSuffixLabel);
 
             // Destination Path
             Label destinationPathLabel = new Label { Text = "Destination Path:", Dock = DockStyle.Top };
@@ -649,7 +853,7 @@ namespace WinFormsApp
             olderThanTextBox, olderThanLabel,
             autoDeleteCheckBox,
             destinationPathPanel, destinationPathLabel,
-            newFileFormatTextBox, newFileFormatLabel,
+            newFileFormatPanel, newFileFormatLabel,
             filePrefixTextBox, filePrefixLabel
         });
 
@@ -662,6 +866,17 @@ namespace WinFormsApp
                 Height = 50,
                 FlowDirection = FlowDirection.LeftToRight
             };
+
+            // Add Button
+            addButton = new Button
+            {
+                Text = "Add",
+                Size = new Size(75, 30),
+                BackColor = Color.LightBlue,
+                ForeColor = Color.White
+            };
+            addButton.Click += AddButton_Click;
+            buttonPanel.Controls.Add(addButton);
 
             // Edit Button
             editButton = new Button
@@ -700,68 +915,129 @@ namespace WinFormsApp
             this.Controls.Add(buttonPanel);
         }
 
-        private void EditButton_Click(object sender, EventArgs e)
+        private void AddButton_Click(object sender, EventArgs e)
         {
-            if (settingsDataGridView.SelectedRows.Count == 0)
-            {
-                MessageBox.Show("Please select a row to edit.");
-                return;
-            }
-
-            // Toggle visibility
+            // Switch to Edit Mode for adding new entry
             settingsDataGridView.Visible = false;
             editModePanel.Visible = true;
 
-            // Populate fields with selected row data
-            DataGridViewRow selectedRow = settingsDataGridView.SelectedRows[0];
-            filePrefixTextBox.Text = selectedRow.Cells["ID"].Value.ToString();
-            newFileFormatTextBox.Text = selectedRow.Cells["FileFormat"].Value.ToString();
-            destinationPathTextBox.Text = selectedRow.Cells["Path"].Value.ToString();
+            // Clear fields for new entry
+            filePrefixTextBox.Clear();
+            newFileFormatPicker.Value = DateTime.Now;
+            destinationPathTextBox.Clear();
+            olderThanTextBox.Clear();
+            autoDeleteCheckBox.Checked = false;
 
-            // Update buttons
+            // Update buttons for Add Mode
             editButton.Enabled = false;
             saveButton.Enabled = true;
             closeButton.Text = "Cancel";
+            isEditMode = false;
+        }
+
+        private void EditButton_Click(object sender, EventArgs e)
+        {
+            if (settingsDataGridView.SelectedRows.Count > 0)
+            {
+                // Get selected row
+                DataGridViewRow selectedRow = settingsDataGridView.SelectedRows[0];
+
+                // Extract and split the FileFormat column (e.g., A250122.tas)
+                string fileFormat = selectedRow.Cells["FileFormat"].Value.ToString(); // e.g., "A250122"
+                string filePrefix = fileFormat.Substring(0, 1); // Extract prefix (e.g., "A")
+                string datePart = fileFormat.Substring(1, 6);   // Extract date part (e.g., "250122")
+
+                // Parse date part to DateTimePicker
+                DateTime parsedDate;
+                if (DateTime.TryParseExact(datePart, "ddMMyy", null, System.Globalization.DateTimeStyles.None, out parsedDate))
+                {
+                    newFileFormatPicker.Value = parsedDate;
+                }
+                else
+                {
+                    MessageBox.Show("Invalid date format in the selected row.");
+                    return;
+                }
+
+                // Populate other fields
+                filePrefixTextBox.Text = filePrefix;
+                destinationPathTextBox.Text = selectedRow.Cells["Path"].Value.ToString();
+                //autoDeleteCheckBox.Checked = Convert.ToBoolean(selectedRow.Cells["Auto_Delete"].Value); // Checkbox
+                //olderThanTextBox.Text = selectedRow.Cells["Older_Than_Days"].Value.ToString();      // Days value
+
+                // Enable Edit Mode UI
+                isEditMode = true;
+                editModePanel.Visible = true;
+                settingsDataGridView.Visible = false;
+                saveButton.Enabled = true;
+            }
+            else
+            {
+                MessageBox.Show("Please select a row to edit.");
+            }
         }
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
             // Validate Inputs
-            if (string.IsNullOrEmpty(filePrefixTextBox.Text) ||
-                string.IsNullOrEmpty(newFileFormatTextBox.Text) ||
-                string.IsNullOrEmpty(destinationPathTextBox.Text))
+            if (string.IsNullOrEmpty(filePrefixTextBox.Text) || string.IsNullOrEmpty(destinationPathTextBox.Text))
             {
                 MessageBox.Show("Please fill all fields.");
                 return;
             }
 
-            // Save Logic (e.g., update DataGridView)
-            DataGridViewRow selectedRow = settingsDataGridView.SelectedRows[0];
-            selectedRow.Cells["ID"].Value = filePrefixTextBox.Text;
-            selectedRow.Cells["FileFormat"].Value = newFileFormatTextBox.Text;
-            selectedRow.Cells["Path"].Value = destinationPathTextBox.Text;
+            // Generate FileFormat by merging File Prefix and New File Format
+            string fileFormat = $"{filePrefixTextBox.Text}{newFileFormatPicker.Value:yyMMdd}.tas";
 
-            MessageBox.Show("Settings have been saved successfully.");
+            // Convert checkbox value to Yes/No
+            string autoDeleteValue = autoDeleteCheckBox.Checked ? "Yes" : "No";
 
-            ExitEditMode();
-        }
+            // SQL Insert or Update Query
+            string query = isEditMode
+                ? "UPDATE settings SET Fl_Prfx = ?, Nw_Fl_Frmt = ?, Dstntn_Path = ?, At_Dlt = ?, Oldr_Thn = ? WHERE Id = ?"
+                : "INSERT INTO settings (Fl_Prfx, Nw_Fl_Frmt, Dstntn_Path, At_Dlt, Oldr_Thn) VALUES (?, ?, ?, ?, ?)";
 
-        private void BrowseButton_Click(object sender, EventArgs e)
-        {
-            using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog())
+            try
             {
-                if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                connection.Open();
+                using (OleDbCommand cmd = new OleDbCommand(query, connection))
                 {
-                    destinationPathTextBox.Text = folderBrowserDialog.SelectedPath;
+                    // Add Parameters
+                    cmd.Parameters.AddWithValue("?", filePrefixTextBox.Text);
+                    cmd.Parameters.AddWithValue("?", newFileFormatPicker.Value.ToString("yyMMdd"));
+                    cmd.Parameters.AddWithValue("?", destinationPathTextBox.Text);
+                    cmd.Parameters.AddWithValue("?", autoDeleteValue); // Store checkbox value
+                    cmd.Parameters.AddWithValue("?", olderThanTextBox.Text);  // Store days value
+
+                    if (isEditMode)
+                        cmd.Parameters.AddWithValue("?", settingsDataGridView.SelectedRows[0].Cells["ID"].Value.ToString());
+
+                    cmd.ExecuteNonQuery();
                 }
+
+                MessageBox.Show("Data saved successfully!");
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error saving data: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close(); // Ensure connection is closed before loading data
+            }
+
+            // Reload data and update UI
+            LoadSettingsData();
+            settingsDataGridView.Visible = true;
+            editModePanel.Visible = false;
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
         {
-            if (isEditMode)
+            if (closeButton.Text == "Cancel")
             {
-                ExitEditMode();
+                settingsDataGridView.Visible = true;
+                editModePanel.Visible = false;
             }
             else
             {
@@ -769,18 +1045,16 @@ namespace WinFormsApp
             }
         }
 
-        private void ExitEditMode()
+        private void BrowseButton_Click(object sender, EventArgs e)
         {
-            isEditMode = false;
-
-            // Toggle visibility
-            settingsDataGridView.Visible = true;
-            editModePanel.Visible = false;
-
-            // Update buttons
-            editButton.Enabled = true;
-            saveButton.Enabled = false;
-            closeButton.Text = "Close";
+            // Open folder browser dialog
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                if (folderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    destinationPathTextBox.Text = folderDialog.SelectedPath;
+                }
+            }
         }
     }
 
