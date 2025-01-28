@@ -12,6 +12,8 @@ namespace WinFormsApp
     {
         private PictureBox flyingFile;
         private PictureBox destinationTarget;
+        private PictureBox arodeklogo;
+        private PictureBox parklogo;
         private Point startPosition;
         private Point controlPoint;
         private Point endPosition;
@@ -30,20 +32,38 @@ namespace WinFormsApp
             this.SuspendLayout();
 
             // Form properties
-            this.ClientSize = new Size(800, 500);
+            this.ClientSize = new Size(385, 500);
             this.Text = "Auto Attendance Transfer";
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(64, 64, 64); // Rich black background for luxury feel
+
+
+            // Get the current directory of the application
+            string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            // Path to the "Images" folder relative to the application's directory
+            string imagesDirectory = Path.Combine(appDirectory, "Images");
+
+            // Arodek logo
+            parklogo = new PictureBox
+            {
+                Image = Image.FromFile(Path.Combine(imagesDirectory, "Park-Hotel-Logo.png")),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                Size = new Size(55, 55),
+                Location = new Point(162, 105),
+                BackColor = Color.Transparent // Transparent to blend with form
+            };
+            this.Controls.Add(parklogo);
 
             // Start Button
             Button startButton = new Button
             {
                 Text = "Start",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Gold, // Gold for elegance
+                BackColor = Color.White, // Gold for elegance
                 ForeColor = Color.Black, // Black text for contrast
-                Size = new Size(100, 40),
-                Location = new Point(250, 30)
+                Size = new Size(80, 30),
+                Location = new Point(70, 20)
             };
             startButton.Click += async (sender, e) => await StartButton_Click(sender, e);
             this.Controls.Add(startButton);
@@ -53,28 +73,22 @@ namespace WinFormsApp
             {
                 Text = "Stop",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.DarkRed, // Deep red for prominence
-                ForeColor = Color.White, // White text for clarity
-                Size = new Size(100, 40),
-                Location = new Point(450, 30)
+                BackColor = Color.White, // Deep red for prominence
+                ForeColor = Color.Black, // White text for clarity
+                Size = new Size(80, 30),
+                Location = new Point(230, 20)
             };
 
             stopButton.Click += StopButton_Click;
             this.Controls.Add(stopButton);
-
-            // Get the current directory of the application
-            string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
-
-            // Path to the "Images" folder relative to the application's directory
-            string imagesDirectory = Path.Combine(appDirectory, "Images");
 
             // Flying File (PictureBox with file icon)
             flyingFile = new PictureBox
             {
                 Image = Image.FromFile(Path.Combine(imagesDirectory, "OIP.jpg")),
                 SizeMode = PictureBoxSizeMode.StretchImage,
-                Size = new Size(30, 30),
-                Location = new Point(180, 150), // Starting position
+                Size = new Size(15, 15),
+                Location = new Point(50, 140), // Starting position
                 BackColor = Color.Transparent // Transparent to blend with form
             };
             this.Controls.Add(flyingFile);
@@ -84,8 +98,8 @@ namespace WinFormsApp
             {
                 Image = Image.FromFile(Path.Combine(imagesDirectory, "vector-folder-icon.jpg")),
                 SizeMode = PictureBoxSizeMode.StretchImage,
-                Size = new Size(45, 45),
-                Location = new Point(580, 145),
+                Size = new Size(20, 20),
+                Location = new Point(305, 140),
                 BackColor = Color.Transparent // Transparent to blend with form
             };
             this.Controls.Add(destinationTarget);
@@ -96,10 +110,10 @@ namespace WinFormsApp
             {
                 Text = "Log Report",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Navy, // Deep blue for contrast
-                ForeColor = Color.White,
-                Size = new Size(100, 40),
-                Location = new Point(100, 200)
+                BackColor = Color.White, // Deep blue for contrast
+                ForeColor = Color.Black,
+                Size = new Size(90, 30),
+                Location = new Point(46, 190)
             };
             logReportButton.Click += LogReportButton_Click;
             this.Controls.Add(logReportButton);
@@ -109,10 +123,10 @@ namespace WinFormsApp
             {
                 Text = "Data Cleanup",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Navy,
-                ForeColor = Color.White,
-                Size = new Size(100, 40),
-                Location = new Point(200, 200)
+                BackColor = Color.White,
+                ForeColor = Color.Black,
+                Size = new Size(90, 30),
+                Location = new Point(146, 190)
             };
             dataCleanupButton.Click += DataCleanupButton_Click;
             this.Controls.Add(dataCleanupButton);
@@ -122,10 +136,10 @@ namespace WinFormsApp
             {
                 Text = "Settings",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Navy,
-                ForeColor = Color.White,
-                Size = new Size(100, 40),
-                Location = new Point(300, 200)
+                BackColor = Color.White,
+                ForeColor = Color.Black,
+                Size = new Size(90, 30),
+                Location = new Point(246, 190)
             };
             settingsButton.Click += SettingsButton_Click;
             this.Controls.Add(settingsButton);
@@ -135,10 +149,10 @@ namespace WinFormsApp
             {
                 Text = "Location",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Navy,
-                ForeColor = Color.White,
-                Size = new Size(100, 40),
-                Location = new Point(400, 200)
+                BackColor = Color.White,
+                ForeColor = Color.Black,
+                Size = new Size(90, 30),
+                Location = new Point(46, 230)
             };
             locationButton.Click += LocationButton_Click;
             this.Controls.Add(locationButton);
@@ -148,10 +162,10 @@ namespace WinFormsApp
             {
                 Text = "Machine Type",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Navy,
-                ForeColor = Color.White,
-                Size = new Size(100, 40),
-                Location = new Point(500, 200)
+                BackColor = Color.White,
+                ForeColor = Color.Black,
+                Size = new Size(90, 30),
+                Location = new Point(146, 230)
             };
             machinetypeButton.Click += MachineTypeButton_Click;
             this.Controls.Add(machinetypeButton);
@@ -161,10 +175,10 @@ namespace WinFormsApp
             {
                 Text = "Close",
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                BackColor = Color.Navy,
-                ForeColor = Color.White,
-                Size = new Size(100, 40),
-                Location = new Point(600, 200)
+                BackColor = Color.White,
+                ForeColor = Color.Black,
+                Size = new Size(90, 30),
+                Location = new Point(246, 230)
             };
             closeButton.Click += CloseButton_Click;
             this.Controls.Add(closeButton);
@@ -175,12 +189,35 @@ namespace WinFormsApp
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
                 ReadOnly = true,
-                Size = new Size(700, 200),
-                Location = new Point(50, 250),
+                Size = new Size(300, 180),
+                Location = new Point(42, 280),
                 BackColor = Color.White,
                 ForeColor = Color.Black
             };
             this.Controls.Add(logTextBox);
+
+            // Arodek logo
+            arodeklogo = new PictureBox
+            {
+                Image = Image.FromFile(Path.Combine(imagesDirectory, "arodek-logo.png")),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                Size = new Size(30, 30),
+                Location = new Point(342, 465),
+                BackColor = Color.Transparent // Transparent to blend with form
+            };
+            this.Controls.Add(arodeklogo);
+
+            // "Powered By" label
+            Label poweredByLabel = new Label
+            {
+                Text = "\u00A9 Powered By",
+                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                ForeColor = Color.White,
+                BackColor = Color.Transparent,
+                AutoSize = true,
+                Location = new Point(262, 473) // Position it beside the logo
+            };
+            this.Controls.Add(poweredByLabel);
 
             // Initialize curve points
             startPosition = flyingFile.Location;
@@ -198,16 +235,34 @@ namespace WinFormsApp
         {
             isAnimating = true;
 
+            // Disable the Start button and change its color to grey
+            if (sender is Button startButton)
+            {
+                startButton.Enabled = false;
+                startButton.BackColor = Color.LightGray;
+                startButton.ForeColor = Color.DarkGray; // Change text color to dark grey
+            }
+
+            // Enable the Stop button and change its color to active
+            var stopButton = this.Controls.OfType<Button>().FirstOrDefault(button => button.Text == "Stop");
+            if (stopButton != null)
+            {
+                stopButton.Enabled = true;
+                stopButton.BackColor = Color.White; // Active color for Stop button
+                stopButton.ForeColor = Color.Black;
+            }
+
             // Retrieve file transfer details from the database
             string fileName = string.Empty;
             string sourcePath = string.Empty;
             string destinationPath = string.Empty;
+            Dictionary<string, string> locationMappings = new Dictionary<string, string>();
 
             try
             {
                 string databasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "user_details.MDB");
-                //string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databasePath};";
-                // Retrieve data from "machine_type_master" and "settings" tables
+
+                // Retrieve data from the database
                 using (OleDbConnection connection = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databasePath};"))
                 {
                     connection.Open();
@@ -219,7 +274,7 @@ namespace WinFormsApp
                         if (reader.Read())
                         {
                             fileName = reader["Fl_Nm_Frmt"].ToString();
-                            sourcePath = Path.Combine(reader["Fl_Src_Pth"].ToString(),$"{fileName}");
+                            sourcePath = Path.Combine(reader["Fl_Src_Pth"].ToString(), fileName);
                         }
                     }
 
@@ -234,6 +289,18 @@ namespace WinFormsApp
                             destinationPath = Path.Combine(reader["Dstntn_Path"].ToString(), $"{prefix}{newFileName}.tas");
                         }
                     }
+
+                    // Get location mappings
+                    using (OleDbCommand command = new OleDbCommand("SELECT FortunaOut, cms FROM location_master", connection))
+                    using (OleDbDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string fortunaOut = reader["FortunaOut"].ToString();
+                            string cms = reader["cms"].ToString();
+                            locationMappings[fortunaOut] = cms;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -242,23 +309,48 @@ namespace WinFormsApp
                 return;
             }
 
-            logTextBox.AppendText($"Starting file transfer...\r\nSource: {sourcePath}\r\nDestination: {destinationPath}\r\n");
+            logTextBox.AppendText($"Starting file conversion...\r\nSource: {sourcePath}\r\nDestination: {destinationPath}\r\n");
 
-            var transferTask = Task.Run(() =>
+            var conversionTask = Task.Run(() =>
             {
                 try
                 {
-                    // Perform the file transfer
-                    File.Copy(sourcePath, destinationPath, true);
-                    logTextBox.Invoke((Action)(() => logTextBox.AppendText("File transfer completed.\r\n")));
+                    using (StreamReader reader = new StreamReader(sourcePath))
+                    using (StreamWriter writer = new StreamWriter(destinationPath))
+                    {
+                        int lineNumber = 1;
+
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            // Extract components from the source line
+                            string fortunaCode = line.Substring(0, 4); // AA13
+                            string serialNumber = line.Substring(4, 6); // 000134
+                            string dateCode = line.Substring(10, 8); // 02012025
+                            string numericCode = line.Substring(18, 8); // 20015869
+                            string cmsCode = line.Substring(26, 5); // CMS01
+
+                            // Transform components
+                            string newFortunaCode = locationMappings.ContainsKey(fortunaCode) ? locationMappings[fortunaCode] : fortunaCode;
+                            string newCmsCode = cmsCode == "CMS01" ? "CMS81" : cmsCode == "CMS02" ? "CMS82" : cmsCode;
+                            string newLine = $"{lineNumber.ToString("D6")}{newFortunaCode}{serialNumber}{dateCode}{numericCode}{newCmsCode}";
+
+                            // Write to destination file
+                            writer.WriteLine(newLine);
+
+                            lineNumber++;
+                        }
+                    }
+
+                    logTextBox.Invoke((Action)(() => logTextBox.AppendText("File conversion completed successfully.\r\n")));
                 }
                 catch (Exception ex)
                 {
-                    logTextBox.Invoke((Action)(() => logTextBox.AppendText($"Error during file transfer: {ex.Message}\r\n")));
+                    logTextBox.Invoke((Action)(() => logTextBox.AppendText($"Error during file conversion: {ex.Message}\r\n")));
                 }
             });
 
-            await AnimateFileTransferAsync(transferTask); // Start the animation with the file transfer task
+            await AnimateFileTransferAsync(conversionTask); // Start the animation with the file conversion task
         }
 
         private void StopButton_Click(object sender, EventArgs e)
@@ -278,14 +370,18 @@ namespace WinFormsApp
             if (startButton != null)
             {
                 startButton.Enabled = true;
-                startButton.BackColor = Color.SeaGreen; // Restore original color
-                startButton.ForeColor = Color.White; // Restore original text color
+                startButton.BackColor = Color.White; // Restore original color
+                startButton.ForeColor = Color.Black; // Restore original text color
             }
+
             logTextBox.AppendText("Transfer stopped.\r\n");
         }
 
         private async Task AnimateFileTransferAsync(Task fileTransferTask)
         {
+            // Adjust the end position to stop just above the destination file image
+            Point adjustedEndPosition = new Point(endPosition.X - 27, endPosition.Y - 12);
+
             do
             {
                 t = 0;
@@ -293,8 +389,8 @@ namespace WinFormsApp
                 {
                     t += 0.007f; // Adjust this value for the desired speed
 
-                    int x = (int)((1 - t) * (1 - t) * startPosition.X + 2 * (1 - t) * t * controlPoint.X + t * t * endPosition.X);
-                    int y = (int)((1 - t) * (1 - t) * startPosition.Y + 2 * (1 - t) * t * controlPoint.Y + t * t * endPosition.Y);
+                    int x = (int)((1 - t) * (1 - t) * startPosition.X + 2 * (1 - t) * t * controlPoint.X + t * t * adjustedEndPosition.X);
+                    int y = (int)((1 - t) * (1 - t) * startPosition.Y + 2 * (1 - t) * t * controlPoint.Y + t * t * adjustedEndPosition.Y);
 
                     flyingFile.Location = new Point(x, y);
 
@@ -779,7 +875,6 @@ namespace WinFormsApp
             string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databaseFilePath};";
             connection = new OleDbConnection(connectionString);
         }
-
 
         private void LoadSettingsData()
         {
