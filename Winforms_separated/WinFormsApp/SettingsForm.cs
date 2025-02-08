@@ -60,15 +60,27 @@ namespace WinFormsApp
                 // Clear existing rows in DataGridView
                 settingsDataGridView.Rows.Clear();
 
-                // Add rows to DataGridView
-                foreach (DataRow row in dataTable.Rows)
+                if (dataTable.Rows.Count > 0)
                 {
-                    string filePrefix = row["Fl_Prfx"].ToString();
-                    string newFileFormat = DateTime.ParseExact(row["Nw_Fl_Frmt"].ToString(), "yyMMdd", null).ToString("yyMMdd");
-                    string fileFormat = $"{filePrefix}{newFileFormat}.tas";
-                    string path = row["Dstntn_Path"].ToString();
+                    // Load existing records into DataGridView
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        string filePrefix = row["Fl_Prfx"].ToString();
+                        string newFileFormat = DateTime.ParseExact(row["Nw_Fl_Frmt"].ToString(), "yyMMdd", null).ToString("yyMMdd");
+                        string fileFormat = $"{filePrefix}{newFileFormat}.tas";
+                        string path = row["Dstntn_Path"].ToString();
 
-                    settingsDataGridView.Rows.Add(row["Id"], fileFormat, path);
+                        settingsDataGridView.Rows.Add(row["Id"], fileFormat, path);
+                    }
+                }
+                else
+                {
+                    // No records found, add a default row
+                    string defaultPrefix = "A";
+                    string defaultDate = DateTime.Now.ToString("yyMMdd");
+                    string defaultFileFormat = $"{defaultPrefix}{defaultDate}.tas";
+
+                    settingsDataGridView.Rows.Add("1", defaultFileFormat, "D:"); // ID left blank
                 }
             }
             catch (Exception ex)
@@ -175,16 +187,16 @@ namespace WinFormsApp
                 FlowDirection = FlowDirection.LeftToRight
             };
 
-            // Add Button
-            addButton = new Button
-            {
-                Text = "Add",
-                Size = new Size(75, 30),
-                BackColor = Color.LightBlue,
-                ForeColor = Color.White
-            };
-            addButton.Click += AddButton_Click;
-            buttonPanel.Controls.Add(addButton);
+            //// Add Button
+            //addButton = new Button
+            //{
+            //    Text = "Add",
+            //    Size = new Size(75, 30),
+            //    BackColor = Color.LightBlue,
+            //    ForeColor = Color.White
+            //};
+            //addButton.Click += AddButton_Click;
+            //buttonPanel.Controls.Add(addButton);
 
             // Edit Button
             editButton = new Button
@@ -223,25 +235,25 @@ namespace WinFormsApp
             this.Controls.Add(buttonPanel);
         }
 
-        private void AddButton_Click(object sender, EventArgs e)
-        {
-            // Switch to Edit Mode for adding new entry
-            settingsDataGridView.Visible = false;
-            editModePanel.Visible = true;
+        //private void AddButton_Click(object sender, EventArgs e)
+        //{
+        //    // Switch to Edit Mode for adding new entry
+        //    settingsDataGridView.Visible = false;
+        //    editModePanel.Visible = true;
 
-            // Clear fields for new entry
-            filePrefixTextBox.Clear();
-            newFileFormatPicker.Value = DateTime.Now;
-            destinationPathTextBox.Clear();
-            olderThanTextBox.Clear();
-            autoDeleteCheckBox.Checked = false;
+        //    // Clear fields for new entry
+        //    filePrefixTextBox.Clear();
+        //    newFileFormatPicker.Value = DateTime.Now;
+        //    destinationPathTextBox.Clear();
+        //    olderThanTextBox.Clear();
+        //    autoDeleteCheckBox.Checked = false;
 
-            // Update buttons for Add Mode
-            editButton.Enabled = false;
-            saveButton.Enabled = true;
-            closeButton.Text = "Cancel";
-            isEditMode = false;
-        }
+        //    // Update buttons for Add Mode
+        //    editButton.Enabled = false;
+        //    saveButton.Enabled = true;
+        //    closeButton.Text = "Cancel";
+        //    isEditMode = false;
+        //}
 
         private void EditButton_Click(object sender, EventArgs e)
         {
@@ -257,7 +269,7 @@ namespace WinFormsApp
 
                 // Parse date part to DateTimePicker
                 DateTime parsedDate;
-                if (DateTime.TryParseExact(datePart, "ddMMyy", null, System.Globalization.DateTimeStyles.None, out parsedDate))
+                if (DateTime.TryParseExact(datePart, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out parsedDate))
                 {
                     newFileFormatPicker.Value = parsedDate;
                 }
@@ -301,9 +313,7 @@ namespace WinFormsApp
             string autoDeleteValue = autoDeleteCheckBox.Checked ? "Yes" : "No";
 
             // SQL Insert or Update Query
-            string query = isEditMode
-                ? "UPDATE settings SET Fl_Prfx = ?, Nw_Fl_Frmt = ?, Dstntn_Path = ?, At_Dlt = ?, Oldr_Thn = ? WHERE Id = ?"
-                : "INSERT INTO settings (Fl_Prfx, Nw_Fl_Frmt, Dstntn_Path, At_Dlt, Oldr_Thn) VALUES (?, ?, ?, ?, ?)";
+            string query = "INSERT INTO settings (Fl_Prfx, Nw_Fl_Frmt, Dstntn_Path, At_Dlt, Oldr_Thn) VALUES (?, ?, ?, ?, ?)";
 
             try
             {
@@ -365,4 +375,5 @@ namespace WinFormsApp
             }
         }
     }
+
 }

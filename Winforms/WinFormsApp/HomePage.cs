@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Configuration;
 
 namespace WinFormsApp
 {
@@ -103,7 +104,6 @@ namespace WinFormsApp
                 BackColor = Color.Transparent // Transparent to blend with form
             };
             this.Controls.Add(destinationTarget);
-
 
             // Log Report Button
             Button logReportButton = new Button
@@ -262,7 +262,6 @@ namespace WinFormsApp
             {
                 string databasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "user_details.MDB");
 
-                // Retrieve data from the database
                 using (OleDbConnection connection = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databasePath};"))
                 {
                     connection.Open();
@@ -276,6 +275,13 @@ namespace WinFormsApp
                             fileName = reader["Fl_Nm_Frmt"].ToString();
                             sourcePath = Path.Combine(reader["Fl_Src_Pth"].ToString(), fileName);
                         }
+                    }
+
+                    // **Check if fileName is in ddMMyyyy.TAS format and matches the current date**
+                    if (!ValidateFileName(fileName))
+                    {
+                        logTextBox.AppendText($"Error: File name '{fileName}' does not match today's date format (ddMMyyyy.TAS). Conversion aborted.\r\n");
+                        return;
                     }
 
                     // Get destination path and file naming details
@@ -319,8 +325,8 @@ namespace WinFormsApp
                     using (StreamWriter writer = new StreamWriter(destinationPath))
                     {
                         int lineNumber = 1;
-
                         string line;
+
                         while ((line = reader.ReadLine()) != null)
                         {
                             // Extract components from the source line
@@ -352,6 +358,142 @@ namespace WinFormsApp
 
             await AnimateFileTransferAsync(conversionTask); // Start the animation with the file conversion task
         }
+
+        /// <summary>
+        /// Validates if the file name matches today's date in "ddMMyyyy.TAS" format.
+        /// </summary>
+        /// <param name="fileName">File name to check.</param>
+        /// <returns>True if valid, otherwise false.</returns>
+        private bool ValidateFileName(string fileName)
+        {
+            // Get today's date in "ddMMyyyy" format
+            string todayDate = DateTime.Now.ToString("ddMMyyyy");
+
+            // Check if the file name matches the pattern "ddMMyyyy.TAS"
+            return fileName.Equals($"{todayDate}.TAS", StringComparison.OrdinalIgnoreCase);
+        }
+
+        //private async Task StartButton_Click(object sender, EventArgs e)
+        //{
+        //    isAnimating = true;
+
+        //    // Disable the Start button and change its color to grey
+        //    if (sender is Button startButton)
+        //    {
+        //        startButton.Enabled = false;
+        //        startButton.BackColor = Color.LightGray;
+        //        startButton.ForeColor = Color.DarkGray; // Change text color to dark grey
+        //    }
+
+        //    // Enable the Stop button and change its color to active
+        //    var stopButton = this.Controls.OfType<Button>().FirstOrDefault(button => button.Text == "Stop");
+        //    if (stopButton != null)
+        //    {
+        //        stopButton.Enabled = true;
+        //        stopButton.BackColor = Color.White; // Active color for Stop button
+        //        stopButton.ForeColor = Color.Black;
+        //    }
+
+        //    // Retrieve file transfer details from the database
+        //    string fileName = string.Empty;
+        //    string sourcePath = string.Empty;
+        //    string destinationPath = string.Empty;
+        //    Dictionary<string, string> locationMappings = new Dictionary<string, string>();
+
+        //    try
+        //    {
+        //        string databasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "user_details.MDB");
+
+        //        // Retrieve data from the database
+        //        using (OleDbConnection connection = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databasePath};"))
+        //        {
+        //            connection.Open();
+
+        //            // Get file name and source path
+        //            using (OleDbCommand command = new OleDbCommand("SELECT Fl_Nm_Frmt, Fl_Src_Pth FROM machine_type_master", connection))
+        //            using (OleDbDataReader reader = command.ExecuteReader())
+        //            {
+        //                if (reader.Read())
+        //                {
+        //                    fileName = reader["Fl_Nm_Frmt"].ToString();
+        //                    sourcePath = Path.Combine(reader["Fl_Src_Pth"].ToString(), fileName);
+        //                }
+        //            }
+
+        //            // Get destination path and file naming details
+        //            using (OleDbCommand command = new OleDbCommand("SELECT Dstntn_Path, Fl_Prfx, Nw_Fl_Frmt FROM settings", connection))
+        //            using (OleDbDataReader reader = command.ExecuteReader())
+        //            {
+        //                if (reader.Read())
+        //                {
+        //                    string prefix = reader["Fl_Prfx"].ToString();
+        //                    string newFileName = reader["Nw_Fl_Frmt"].ToString();
+        //                    destinationPath = Path.Combine(reader["Dstntn_Path"].ToString(), $"{prefix}{newFileName}.tas");
+        //                }
+        //            }
+
+        //            // Get location mappings
+        //            using (OleDbCommand command = new OleDbCommand("SELECT FortunaOut, cms FROM location_master", connection))
+        //            using (OleDbDataReader reader = command.ExecuteReader())
+        //            {
+        //                while (reader.Read())
+        //                {
+        //                    string fortunaOut = reader["FortunaOut"].ToString();
+        //                    string cms = reader["cms"].ToString();
+        //                    locationMappings[fortunaOut] = cms;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logTextBox.AppendText($"Error retrieving data from database: {ex.Message}\r\n");
+        //        return;
+        //    }
+
+        //    logTextBox.AppendText($"Starting file conversion...\r\nSource: {sourcePath}\r\nDestination: {destinationPath}\r\n");
+
+        //    var conversionTask = Task.Run(() =>
+        //    {
+        //        try
+        //        {
+        //            using (StreamReader reader = new StreamReader(sourcePath))
+        //            using (StreamWriter writer = new StreamWriter(destinationPath))
+        //            {
+        //                int lineNumber = 1;
+
+        //                string line;
+        //                while ((line = reader.ReadLine()) != null)
+        //                {
+        //                    // Extract components from the source line
+        //                    string fortunaCode = line.Substring(0, 4); // AA13
+        //                    string serialNumber = line.Substring(4, 6); // 000134
+        //                    string dateCode = line.Substring(10, 8); // 02012025
+        //                    string numericCode = line.Substring(18, 8); // 20015869
+        //                    string cmsCode = line.Substring(26, 5); // CMS01
+
+        //                    // Transform components
+        //                    string newFortunaCode = locationMappings.ContainsKey(fortunaCode) ? locationMappings[fortunaCode] : fortunaCode;
+        //                    string newCmsCode = cmsCode == "CMS01" ? "CMS81" : cmsCode == "CMS02" ? "CMS82" : cmsCode;
+        //                    string newLine = $"{lineNumber.ToString("D6")}{newFortunaCode}{serialNumber}{dateCode}{numericCode}{newCmsCode}";
+
+        //                    // Write to destination file
+        //                    writer.WriteLine(newLine);
+
+        //                    lineNumber++;
+        //                }
+        //            }
+
+        //            logTextBox.Invoke((Action)(() => logTextBox.AppendText("File conversion completed successfully.\r\n")));
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            logTextBox.Invoke((Action)(() => logTextBox.AppendText($"Error during file conversion: {ex.Message}\r\n")));
+        //        }
+        //    });
+
+        //    await AnimateFileTransferAsync(conversionTask); // Start the animation with the file conversion task
+        //}
 
         private void StopButton_Click(object sender, EventArgs e)
         {
@@ -479,7 +621,7 @@ namespace WinFormsApp
         private void InitializeComponent()
         {
             this.Text = "Machine Type Master";
-            this.ClientSize = new Size(600, 400);
+            this.ClientSize = new Size(450, 400);
             this.StartPosition = FormStartPosition.CenterParent;
 
             // DataGridView
@@ -890,15 +1032,27 @@ namespace WinFormsApp
                 // Clear existing rows in DataGridView
                 settingsDataGridView.Rows.Clear();
 
-                // Add rows to DataGridView
-                foreach (DataRow row in dataTable.Rows)
+                if (dataTable.Rows.Count > 0)
                 {
-                    string filePrefix = row["Fl_Prfx"].ToString();
-                    string newFileFormat = DateTime.ParseExact(row["Nw_Fl_Frmt"].ToString(), "yyMMdd", null).ToString("yyMMdd");
-                    string fileFormat = $"{filePrefix}{newFileFormat}.tas";
-                    string path = row["Dstntn_Path"].ToString();
+                    // Load existing records into DataGridView
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        string filePrefix = row["Fl_Prfx"].ToString();
+                        string newFileFormat = DateTime.ParseExact(row["Nw_Fl_Frmt"].ToString(), "yyMMdd", null).ToString("yyMMdd");
+                        string fileFormat = $"{filePrefix}{newFileFormat}.tas";
+                        string path = row["Dstntn_Path"].ToString();
 
-                    settingsDataGridView.Rows.Add(row["Id"], fileFormat, path);
+                        settingsDataGridView.Rows.Add(row["Id"], fileFormat, path);
+                    }
+                }
+                else
+                {
+                    // No records found, add a default row
+                    string defaultPrefix = "A";
+                    string defaultDate = DateTime.Now.ToString("yyMMdd");
+                    string defaultFileFormat = $"{defaultPrefix}{defaultDate}.tas";
+
+                    settingsDataGridView.Rows.Add("1", defaultFileFormat, "D:"); // ID left blank
                 }
             }
             catch (Exception ex)
@@ -914,7 +1068,7 @@ namespace WinFormsApp
         private void InitializeComponent()
         {
             this.Text = "Settings";
-            this.ClientSize = new Size(500, 400);
+            this.ClientSize = new Size(450, 400);
             this.StartPosition = FormStartPosition.CenterParent;
 
             // DataGridView
@@ -1005,16 +1159,16 @@ namespace WinFormsApp
                 FlowDirection = FlowDirection.LeftToRight
             };
 
-            // Add Button
-            addButton = new Button
-            {
-                Text = "Add",
-                Size = new Size(75, 30),
-                BackColor = Color.LightBlue,
-                ForeColor = Color.White
-            };
-            addButton.Click += AddButton_Click;
-            buttonPanel.Controls.Add(addButton);
+            //// Add Button
+            //addButton = new Button
+            //{
+            //    Text = "Add",
+            //    Size = new Size(75, 30),
+            //    BackColor = Color.LightBlue,
+            //    ForeColor = Color.White
+            //};
+            //addButton.Click += AddButton_Click;
+            //buttonPanel.Controls.Add(addButton);
 
             // Edit Button
             editButton = new Button
@@ -1053,25 +1207,25 @@ namespace WinFormsApp
             this.Controls.Add(buttonPanel);
         }
 
-        private void AddButton_Click(object sender, EventArgs e)
-        {
-            // Switch to Edit Mode for adding new entry
-            settingsDataGridView.Visible = false;
-            editModePanel.Visible = true;
+        //private void AddButton_Click(object sender, EventArgs e)
+        //{
+        //    // Switch to Edit Mode for adding new entry
+        //    settingsDataGridView.Visible = false;
+        //    editModePanel.Visible = true;
 
-            // Clear fields for new entry
-            filePrefixTextBox.Clear();
-            newFileFormatPicker.Value = DateTime.Now;
-            destinationPathTextBox.Clear();
-            olderThanTextBox.Clear();
-            autoDeleteCheckBox.Checked = false;
+        //    // Clear fields for new entry
+        //    filePrefixTextBox.Clear();
+        //    newFileFormatPicker.Value = DateTime.Now;
+        //    destinationPathTextBox.Clear();
+        //    olderThanTextBox.Clear();
+        //    autoDeleteCheckBox.Checked = false;
 
-            // Update buttons for Add Mode
-            editButton.Enabled = false;
-            saveButton.Enabled = true;
-            closeButton.Text = "Cancel";
-            isEditMode = false;
-        }
+        //    // Update buttons for Add Mode
+        //    editButton.Enabled = false;
+        //    saveButton.Enabled = true;
+        //    closeButton.Text = "Cancel";
+        //    isEditMode = false;
+        //}
 
         private void EditButton_Click(object sender, EventArgs e)
         {
@@ -1087,7 +1241,7 @@ namespace WinFormsApp
 
                 // Parse date part to DateTimePicker
                 DateTime parsedDate;
-                if (DateTime.TryParseExact(datePart, "ddMMyy", null, System.Globalization.DateTimeStyles.None, out parsedDate))
+                if (DateTime.TryParseExact(datePart, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out parsedDate))
                 {
                     newFileFormatPicker.Value = parsedDate;
                 }
@@ -1131,9 +1285,7 @@ namespace WinFormsApp
             string autoDeleteValue = autoDeleteCheckBox.Checked ? "Yes" : "No";
 
             // SQL Insert or Update Query
-            string query = isEditMode
-                ? "UPDATE settings SET Fl_Prfx = ?, Nw_Fl_Frmt = ?, Dstntn_Path = ?, At_Dlt = ?, Oldr_Thn = ? WHERE Id = ?"
-                : "INSERT INTO settings (Fl_Prfx, Nw_Fl_Frmt, Dstntn_Path, At_Dlt, Oldr_Thn) VALUES (?, ?, ?, ?, ?)";
+            string query = "INSERT INTO settings (Fl_Prfx, Nw_Fl_Frmt, Dstntn_Path, At_Dlt, Oldr_Thn) VALUES (?, ?, ?, ?, ?)";
 
             try
             {
@@ -1199,19 +1351,40 @@ namespace WinFormsApp
     public class LocationMaster : Form
     {
         private DataGridView dataGridView;
-        private Button addButton, editButton, deleteButton;
-        private string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;";
+        private Button addButton, editButton, deleteButton, closebutton;
+        private string connectionString; // Declare connectionString as a class-level variable
 
         public LocationMaster()
         {
+            InitializeDatabase();  // Initialize the database first
             InitializeComponent();
             LoadDataFromDatabase();
+        }
+
+        private void InitializeDatabase()
+        {
+            // Get the base directory of the executable
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            // Define the path to the Data folder
+            string dataFolderPath = Path.Combine(baseDirectory, "Data");
+            // Define the path to the database file
+            string databaseFilePath = Path.Combine(dataFolderPath, "user_details.MDB");
+
+            // Check if the database file exists
+            if (!File.Exists(databaseFilePath))
+            {
+                MessageBox.Show("Database file not found! Ensure it is placed in the 'Data' folder beside the executable.");
+                throw new FileNotFoundException("Database file not found.");
+            }
+
+            // Construct and store the connection string in the class-level variable
+            connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databaseFilePath};";
         }
 
         private void InitializeComponent()
         {
             this.Text = "Location Master";
-            this.ClientSize = new Size(400, 300);
+            this.ClientSize = new Size(450, 300);
             this.StartPosition = FormStartPosition.CenterParent;
 
             // DataGridView
@@ -1253,6 +1426,10 @@ namespace WinFormsApp
             deleteButton.Click += DeleteButton_Click;
             buttonPanel.Controls.Add(deleteButton);
 
+            closebutton = new Button { Text = "Close", Size = new Size(75, 30) };
+            closebutton.Click += CloseButton_Click;
+            buttonPanel.Controls.Add(closebutton);
+
             this.Controls.Add(buttonPanel);
         }
 
@@ -1283,7 +1460,6 @@ namespace WinFormsApp
 
         private void AddButton_Click(object sender, EventArgs e)
         {
-            //LocationEditForm editForm = new LocationEditForm(dataGridView);
             LocationEditForm editForm = new LocationEditForm(
                 string.Empty,  // Location (empty for a new entry)
                 string.Empty,  // CMS (empty for a new entry)
@@ -1331,19 +1507,13 @@ namespace WinFormsApp
                 DataGridViewRow selectedRow = dataGridView.SelectedRows[0];
                 string originalLocation = selectedRow.Cells["Location"].Value.ToString();
 
-                //LocationEditForm editForm = new LocationEditForm(
-                //    selectedRow.Cells["Location"].Value.ToString(),
-                //    selectedRow.Cells["CMS"].Value.ToString(),
-                //    selectedRow.Cells["FortunaIn"].Value.ToString(),
-                //    selectedRow.Cells["FortunaOut"].Value.ToString()
-                //);
                 LocationEditForm editForm = new LocationEditForm(
                     selectedRow.Cells["Location"].Value.ToString(),
                     selectedRow.Cells["CMS"].Value.ToString(),
                     selectedRow.Cells["FortunaIn"].Value.ToString(),
                     selectedRow.Cells["FortunaOut"].Value.ToString(),
-                    dataGridView,  // Pass the DataGridView
-                    dataGridView.SelectedRows[0].Index // Pass the selected row index
+                    dataGridView,
+                    dataGridView.SelectedRows[0].Index
                 );
 
                 if (editForm.ShowDialog() == DialogResult.OK)
@@ -1416,6 +1586,11 @@ namespace WinFormsApp
                 MessageBox.Show("Please select a row to delete.");
             }
         }
+
+        private void CloseButton_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
     }
 
     public class DataCleanupWindow : Form
@@ -1434,7 +1609,8 @@ namespace WinFormsApp
         {
             // Form settings
             this.Text = "Delete Log";
-            this.Size = new System.Drawing.Size(400, 250);
+            this.Size = new System.Drawing.Size(450, 250);
+            this.StartPosition = FormStartPosition.CenterParent;
 
             // From Date Label and Picker
             Label fromLabel = new Label();
@@ -1503,7 +1679,7 @@ namespace WinFormsApp
         private void InitializeComponent()
         {
             this.Text = "Log Report";
-            this.ClientSize = new Size(400, 300);
+            this.ClientSize = new Size(450, 300);
             this.StartPosition = FormStartPosition.CenterParent;
 
             // Fields
@@ -1602,9 +1778,10 @@ namespace WinFormsApp
         private bool isEditMode;
         private int selectedRowIndex;
         private DataGridView dataGridView;
+        private string connectionString;
 
         // Database connection string
-        private string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;";
+        //private string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:/Winforms/user_details.MDB;";
 
         // Public properties for accessing the text field values
         public string LocationText => locationNameTextBox.Text;
@@ -1612,8 +1789,29 @@ namespace WinFormsApp
         public string FortunaInText => fortunaInTextBox.Text;
         public string FortunaOutText => fortunaOutTextBox.Text;
 
+        private void InitializeDatabase()
+        {
+            // Get the base directory of the executable
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            // Define the path to the Data folder
+            string dataFolderPath = Path.Combine(baseDirectory, "Data");
+            // Define the path to the database file
+            string databaseFilePath = Path.Combine(dataFolderPath, "user_details.MDB");
+
+            // Check if the database file exists
+            if (!File.Exists(databaseFilePath))
+            {
+                MessageBox.Show("Database file not found! Ensure it is placed in the 'Data' folder beside the executable.");
+                throw new FileNotFoundException("Database file not found.");
+            }
+
+            // Assign the connection string to the class-level variable
+            connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databaseFilePath};";
+        }
+
         public LocationEditForm(string location = "", string cms = "", string fortunaIn = "", string fortunaOut = "", DataGridView gridView = null, int rowIndex = -1)
         {
+            InitializeDatabase();
             dataGridView = gridView;
             selectedRowIndex = rowIndex;
             InitializeComponent();
@@ -1631,7 +1829,7 @@ namespace WinFormsApp
         private void InitializeComponent()
         {
             this.Text = selectedRowIndex == -1 ? "Add Location" : "Edit Location";
-            this.ClientSize = new Size(400, 300);
+            this.ClientSize = new Size(450, 300);
             this.StartPosition = FormStartPosition.CenterParent;
 
             // TableLayoutPanel for aligning labels and textboxes

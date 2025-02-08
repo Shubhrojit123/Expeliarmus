@@ -10,7 +10,7 @@ namespace WinFormsApp
     public class LocationMaster : Form
     {
         private DataGridView dataGridView;
-        private Button addButton, editButton, deleteButton;
+        private Button addButton, editButton, deleteButton, closebutton;
         private string connectionString; // Declare connectionString as a class-level variable
 
         public LocationMaster()
@@ -84,6 +84,10 @@ namespace WinFormsApp
             deleteButton = new Button { Text = "Delete", Size = new Size(75, 30) };
             deleteButton.Click += DeleteButton_Click;
             buttonPanel.Controls.Add(deleteButton);
+
+            closebutton = new Button { Text = "Close", Size = new Size(75, 30) };
+            closebutton.Click += CloseButton_Click;
+            buttonPanel.Controls.Add(closebutton);
 
             this.Controls.Add(buttonPanel);
         }
@@ -241,5 +245,11 @@ namespace WinFormsApp
                 MessageBox.Show("Please select a row to delete.");
             }
         }
+
+        private void CloseButton_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
     }
+
 }

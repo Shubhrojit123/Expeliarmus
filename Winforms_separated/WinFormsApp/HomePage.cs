@@ -261,7 +261,6 @@ namespace WinFormsApp
             {
                 string databasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "user_details.MDB");
 
-                // Retrieve data from the database
                 using (OleDbConnection connection = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databasePath};"))
                 {
                     connection.Open();
@@ -275,6 +274,13 @@ namespace WinFormsApp
                             fileName = reader["Fl_Nm_Frmt"].ToString();
                             sourcePath = Path.Combine(reader["Fl_Src_Pth"].ToString(), fileName);
                         }
+                    }
+
+                    // **Check if fileName is in ddMMyyyy.TAS format and matches the current date**
+                    if (!ValidateFileName(fileName))
+                    {
+                        logTextBox.AppendText($"Error: File name '{fileName}' does not match today's date format (ddMMyyyy.TAS). Conversion aborted.\r\n");
+                        return;
                     }
 
                     // Get destination path and file naming details
@@ -318,8 +324,8 @@ namespace WinFormsApp
                     using (StreamWriter writer = new StreamWriter(destinationPath))
                     {
                         int lineNumber = 1;
-
                         string line;
+
                         while ((line = reader.ReadLine()) != null)
                         {
                             // Extract components from the source line
@@ -351,6 +357,142 @@ namespace WinFormsApp
 
             await AnimateFileTransferAsync(conversionTask); // Start the animation with the file conversion task
         }
+
+        /// <summary>
+        /// Validates if the file name matches today's date in "ddMMyyyy.TAS" format.
+        /// </summary>
+        /// <param name="fileName">File name to check.</param>
+        /// <returns>True if valid, otherwise false.</returns>
+        private bool ValidateFileName(string fileName)
+        {
+            // Get today's date in "ddMMyyyy" format
+            string todayDate = DateTime.Now.ToString("ddMMyyyy");
+
+            // Check if the file name matches the pattern "ddMMyyyy.TAS"
+            return fileName.Equals($"{todayDate}.TAS", StringComparison.OrdinalIgnoreCase);
+        }
+
+        //private async Task StartButton_Click(object sender, EventArgs e)
+        //{
+        //    isAnimating = true;
+
+        //    // Disable the Start button and change its color to grey
+        //    if (sender is Button startButton)
+        //    {
+        //        startButton.Enabled = false;
+        //        startButton.BackColor = Color.LightGray;
+        //        startButton.ForeColor = Color.DarkGray; // Change text color to dark grey
+        //    }
+
+        //    // Enable the Stop button and change its color to active
+        //    var stopButton = this.Controls.OfType<Button>().FirstOrDefault(button => button.Text == "Stop");
+        //    if (stopButton != null)
+        //    {
+        //        stopButton.Enabled = true;
+        //        stopButton.BackColor = Color.White; // Active color for Stop button
+        //        stopButton.ForeColor = Color.Black;
+        //    }
+
+        //    // Retrieve file transfer details from the database
+        //    string fileName = string.Empty;
+        //    string sourcePath = string.Empty;
+        //    string destinationPath = string.Empty;
+        //    Dictionary<string, string> locationMappings = new Dictionary<string, string>();
+
+        //    try
+        //    {
+        //        string databasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "user_details.MDB");
+
+        //        // Retrieve data from the database
+        //        using (OleDbConnection connection = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={databasePath};"))
+        //        {
+        //            connection.Open();
+
+        //            // Get file name and source path
+        //            using (OleDbCommand command = new OleDbCommand("SELECT Fl_Nm_Frmt, Fl_Src_Pth FROM machine_type_master", connection))
+        //            using (OleDbDataReader reader = command.ExecuteReader())
+        //            {
+        //                if (reader.Read())
+        //                {
+        //                    fileName = reader["Fl_Nm_Frmt"].ToString();
+        //                    sourcePath = Path.Combine(reader["Fl_Src_Pth"].ToString(), fileName);
+        //                }
+        //            }
+
+        //            // Get destination path and file naming details
+        //            using (OleDbCommand command = new OleDbCommand("SELECT Dstntn_Path, Fl_Prfx, Nw_Fl_Frmt FROM settings", connection))
+        //            using (OleDbDataReader reader = command.ExecuteReader())
+        //            {
+        //                if (reader.Read())
+        //                {
+        //                    string prefix = reader["Fl_Prfx"].ToString();
+        //                    string newFileName = reader["Nw_Fl_Frmt"].ToString();
+        //                    destinationPath = Path.Combine(reader["Dstntn_Path"].ToString(), $"{prefix}{newFileName}.tas");
+        //                }
+        //            }
+
+        //            // Get location mappings
+        //            using (OleDbCommand command = new OleDbCommand("SELECT FortunaOut, cms FROM location_master", connection))
+        //            using (OleDbDataReader reader = command.ExecuteReader())
+        //            {
+        //                while (reader.Read())
+        //                {
+        //                    string fortunaOut = reader["FortunaOut"].ToString();
+        //                    string cms = reader["cms"].ToString();
+        //                    locationMappings[fortunaOut] = cms;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logTextBox.AppendText($"Error retrieving data from database: {ex.Message}\r\n");
+        //        return;
+        //    }
+
+        //    logTextBox.AppendText($"Starting file conversion...\r\nSource: {sourcePath}\r\nDestination: {destinationPath}\r\n");
+
+        //    var conversionTask = Task.Run(() =>
+        //    {
+        //        try
+        //        {
+        //            using (StreamReader reader = new StreamReader(sourcePath))
+        //            using (StreamWriter writer = new StreamWriter(destinationPath))
+        //            {
+        //                int lineNumber = 1;
+
+        //                string line;
+        //                while ((line = reader.ReadLine()) != null)
+        //                {
+        //                    // Extract components from the source line
+        //                    string fortunaCode = line.Substring(0, 4); // AA13
+        //                    string serialNumber = line.Substring(4, 6); // 000134
+        //                    string dateCode = line.Substring(10, 8); // 02012025
+        //                    string numericCode = line.Substring(18, 8); // 20015869
+        //                    string cmsCode = line.Substring(26, 5); // CMS01
+
+        //                    // Transform components
+        //                    string newFortunaCode = locationMappings.ContainsKey(fortunaCode) ? locationMappings[fortunaCode] : fortunaCode;
+        //                    string newCmsCode = cmsCode == "CMS01" ? "CMS81" : cmsCode == "CMS02" ? "CMS82" : cmsCode;
+        //                    string newLine = $"{lineNumber.ToString("D6")}{newFortunaCode}{serialNumber}{dateCode}{numericCode}{newCmsCode}";
+
+        //                    // Write to destination file
+        //                    writer.WriteLine(newLine);
+
+        //                    lineNumber++;
+        //                }
+        //            }
+
+        //            logTextBox.Invoke((Action)(() => logTextBox.AppendText("File conversion completed successfully.\r\n")));
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            logTextBox.Invoke((Action)(() => logTextBox.AppendText($"Error during file conversion: {ex.Message}\r\n")));
+        //        }
+        //    });
+
+        //    await AnimateFileTransferAsync(conversionTask); // Start the animation with the file conversion task
+        //}
 
         private void StopButton_Click(object sender, EventArgs e)
         {
